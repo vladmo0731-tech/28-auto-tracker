@@ -449,7 +449,7 @@
     .sidebar-bottom-dock{
       flex:0 0 auto;
       display:grid;
-      grid-template-columns:repeat(3,1fr);
+      grid-template-columns:repeat(4,1fr);
       gap:6px;
       border-top:1px solid #22313d;
       padding-top:8px;
@@ -600,6 +600,104 @@
     }
     .cloud-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#39d353}
 
+
+    /* ===== Dashboard / navigation views ===== */
+    .view-hidden{display:none!important}
+    .dashboard-view,.cars-view,.all-expenses-view{min-width:0}
+    .dashboard-header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+      margin-bottom:16px;
+    }
+    .dashboard-header h1{margin:0;font-size:34px;line-height:1.05}
+    .dashboard-header p{margin:7px 0 0;color:#93a3af;font-size:14px}
+    .dashboard-sync{
+      display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;
+      border:1px solid #245031;background:#0e2b19;color:#58de78;font-size:12px;font-weight:800
+    }
+    .dashboard-sync:before{content:"";width:8px;height:8px;background:#39d353;border-radius:50%}
+    .dash-summary{
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px
+    }
+    .dash-card{
+      background:linear-gradient(180deg,#111c26,#0e1821);
+      border:1px solid #2a3a47;border-radius:12px;padding:14px
+    }
+    .dash-label{font-size:12px;color:#8e9ca8;margin-bottom:7px}
+    .dash-value{font-size:25px;font-weight:850;line-height:1}
+    .dash-value.green{color:#39d353}.dash-value.orange{color:#ff9f0a}
+    .dash-grid{
+      display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:14px
+    }
+    .dash-section{
+      background:linear-gradient(180deg,#101b24,#0c161f);
+      border:1px solid #293945;border-radius:12px;overflow:hidden
+    }
+    .dash-section-head{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:13px 15px;border-bottom:1px solid #263743
+    }
+    .dash-section-head h2{margin:0;font-size:17px}
+    .dash-list{padding:9px}
+    .dash-car{
+      display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:11px;align-items:center;
+      padding:9px;border-radius:10px;border:1px solid transparent;cursor:pointer
+    }
+    .dash-car:hover{background:#111d27;border-color:#2c3e4b}
+    .dash-car img{width:70px;height:52px;object-fit:cover;border-radius:7px;background:#1b2934}
+    .dash-car-name{font-weight:800;font-size:14px}
+    .dash-car-meta{font-size:11px;color:#8797a4;margin-top:4px}
+    .dash-car-cost{text-align:right;font-weight:800;font-size:14px}
+    .dash-car-cost small{display:block;color:#82919e;font-weight:600;font-size:10px;margin-bottom:3px}
+    .activity-item{
+      display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;
+      padding:9px 7px;border-bottom:1px solid #202f3a
+    }
+    .activity-item:last-child{border-bottom:0}
+    .activity-icon{
+      width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+      background:#182632;color:#ff9f0a;font-weight:900
+    }
+    .activity-title{font-size:12px;font-weight:700}
+    .activity-meta{font-size:10px;color:#81919e;margin-top:2px}
+    .activity-amount{font-size:12px;font-weight:800}
+    .activity-amount.exp{color:#ff6a55}.activity-amount.sale{color:#39d353}
+    .empty-dash{padding:26px;text-align:center;color:#7e8d98;font-size:13px}
+
+    .cars-view-head,.all-expenses-head{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px
+    }
+    .cars-view-head h1,.all-expenses-head h1{margin:0;font-size:28px}
+    .cars-grid{
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px
+    }
+    .cars-grid-card{
+      background:linear-gradient(180deg,#111c26,#0e1821);border:1px solid #2a3a47;
+      border-radius:12px;overflow:hidden;cursor:pointer
+    }
+    .cars-grid-card:hover{border-color:#ff9f0a}
+    .cars-grid-card img{width:100%;height:150px;object-fit:cover;background:#1a2731}
+    .cars-grid-body{padding:11px}
+    .cars-grid-name{font-size:15px;font-weight:800}
+    .cars-grid-row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#93a3af;margin-top:6px}
+    .cars-grid-row strong{color:#edf2f5}
+    .all-expense-list{display:flex;flex-direction:column;gap:8px}
+    .all-expense-item{
+      display:grid;grid-template-columns:110px 1fr 140px 100px;gap:10px;align-items:center;
+      padding:11px 13px;background:#101b24;border:1px solid #293945;border-radius:10px
+    }
+    .all-expense-date{font-size:11px;color:#8fa0ad}
+    .all-expense-desc{font-weight:700;font-size:13px}
+    .all-expense-car{font-size:11px;color:#aab5be}
+    .all-expense-amount{text-align:right;color:#ff6a55;font-weight:800}
+
+    .sidebar-home-btn{border-color:#3a4d5b!important}
+    .sidebar-home-btn.active{background:#1a2833!important;color:#ffaf23!important;border-color:#6a4a16!important}
+
+    @media(max-width:1200px){
+      .dash-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .cars-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
 </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -639,6 +737,10 @@
     <button class="primary" onclick="openAddCar()">+ Добавить машину</button>
     <div class="car-list" id="carList"></div>
     <div class="sidebar-bottom-dock">
+      <button id="sidebarHomeBtn" class="sidebar-home-btn" onclick="showDashboard()" title="Главная">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v10h13V10M9 20v-6h6v6"/></svg>
+        <span>Главная</span>
+      </button>
       <button onclick="openAnalytics()" title="Аналитика">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/></svg>
         <span>Аналитика</span>
@@ -658,9 +760,56 @@
   </aside>
 
   <main>
+    <section id="dashboardView" class="dashboard-view">
+      <div class="dashboard-header">
+        <div>
+          <h1>Главная</h1>
+          <p>Обзор inventory и финансов</p>
+        </div>
+        <div class="dashboard-sync">Cloud synced</div>
+      </div>
+
+      <div class="dash-summary">
+        <div class="dash-card"><div class="dash-label">В наличии</div><div id="dashInventory" class="dash-value">0</div></div>
+        <div class="dash-card"><div class="dash-label">Вложено</div><div id="dashInvested" class="dash-value orange">$0</div></div>
+        <div class="dash-card"><div class="dash-label">Продажи</div><div id="dashSales" class="dash-value">$0</div></div>
+        <div class="dash-card"><div class="dash-label">Прибыль</div><div id="dashProfit" class="dash-value green">$0</div></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-section">
+          <div class="dash-section-head">
+            <h2>Машины в наличии</h2>
+            <button class="secondary" onclick="showCarsView()">Все машины</button>
+          </div>
+          <div id="dashInventoryList" class="dash-list"></div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-section-head"><h2>Последние действия</h2></div>
+          <div id="dashActivityList" class="dash-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="carsView" class="cars-view view-hidden">
+      <div class="cars-view-head">
+        <h1>Машины</h1>
+        <button class="primary" onclick="openAddCar()">+ Добавить</button>
+      </div>
+      <div id="carsGrid" class="cars-grid"></div>
+    </section>
+
+    <section id="allExpensesView" class="all-expenses-view view-hidden">
+      <div class="all-expenses-head">
+        <h1>Расходы</h1>
+      </div>
+      <div id="allExpensesList" class="all-expense-list"></div>
+    </section>
+
 <div id="emptyState" class="card empty hidden">Добавь первую машину слева.</div>
 
-    <div id="content">
+    <div id="content" class="view-hidden">
       <div class="topbar">
         <div class="title">
           <h1 id="carTitle">—</h1>
@@ -870,6 +1019,7 @@ let pendingPhoto = '';
 let pendingPhotoBlob = null;
 let sessionUser = null;
 let state = {cars:[], selectedId: localStorage.getItem('28SelectedCar') || null};
+let activeView='dashboard'; // always start on Dashboard
 
 async function signIn(){
   const email=document.getElementById('authEmail').value.trim();
@@ -919,12 +1069,42 @@ async function getSignedPhoto(path){
   return data.signedUrl||'';
 }
 
+function isFutureJwtError(error){
+  const msg=String(error?.message||'').toLowerCase();
+  return msg.includes('jwt issued at future') || msg.includes('issued at future');
+}
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function supabaseWithRetry(makeRequest, label='запрос'){
+  let lastError=null;
+  for(let attempt=0; attempt<4; attempt++){
+    const result=await makeRequest();
+    if(!result?.error) return result;
+    lastError=result.error;
+    if(!isFutureJwtError(lastError)) return result;
+
+    // Supabase/PostgREST can briefly reject a freshly-issued JWT due to clock skew.
+    if(attempt===1){
+      try{ await sb.auth.refreshSession(); }catch(_){}
+    }
+    await wait(700 + attempt*650);
+  }
+  return {data:null,error:lastError};
+}
+
 async function loadCloudData(){
   if(!sessionUser) return;
+
   const [carsRes,expRes]=await Promise.all([
-    sb.from('cars').select('*').order('created_at',{ascending:false}),
-    sb.from('expenses').select('*').order('created_at',{ascending:true})
+    supabaseWithRetry(
+      ()=>sb.from('cars').select('*').order('created_at',{ascending:false}),
+      'машины'
+    ),
+    supabaseWithRetry(
+      ()=>sb.from('expenses').select('*').order('created_at',{ascending:true}),
+      'расходы'
+    )
   ]);
+
   if(carsRes.error){ alert('Ошибка загрузки машин: '+carsRes.error.message); return; }
   if(expRes.error){ alert('Ошибка загрузки расходов: '+expRes.error.message); return; }
 
@@ -958,6 +1138,7 @@ async function loadCloudData(){
       expenses:expensesByCar[c.id]||[]
     });
   }
+
   state.cars=cars;
   if(!state.selectedId || !state.cars.some(c=>c.id===state.selectedId)){
     state.selectedId=state.cars[0]?.id||null;
@@ -1001,6 +1182,153 @@ function totals(c){
 function placeholderPhoto(){
   return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><rect width='100%' height='100%' fill='#e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='34' fill='#6b7280'>No photo</text></svg>`);
 }
+
+function setActiveView(view){
+  activeView=view;
+  applyActiveView();
+  if(window.syncMobileNav) window.syncMobileNav();
+}
+function applyActiveView(){
+  const dashboard=document.getElementById('dashboardView');
+  const carsView=document.getElementById('carsView');
+  const expensesView=document.getElementById('allExpensesView');
+  const content=document.getElementById('content');
+  const empty=document.getElementById('emptyState');
+
+  dashboard?.classList.toggle('view-hidden',activeView!=='dashboard');
+  carsView?.classList.toggle('view-hidden',activeView!=='cars');
+  expensesView?.classList.toggle('view-hidden',activeView!=='expenses');
+
+  const detail=activeView==='detail';
+  if(content) content.classList.toggle('view-hidden',!detail || !current());
+  if(empty) empty.classList.toggle('view-hidden',!detail || !!current());
+
+  document.getElementById('sidebarHomeBtn')?.classList.toggle('active',activeView==='dashboard');
+}
+function showDashboard(){
+  setActiveView('dashboard');
+  renderDashboard();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showCarsView(){
+  setActiveView('cars');
+  renderCarsView();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showAllExpenses(){
+  setActiveView('expenses');
+  renderAllExpenses();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function openCarDetail(id){
+  state.selectedId=id;
+  persist();
+  setActiveView('detail');
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderDashboard(){
+  const available=state.cars.filter(c=>c.status!=='Продана');
+  const totalsAll=state.cars.map(c=>({c,t:totals(c)}));
+  const invested=totalsAll.reduce((s,x)=>s+x.t.cost,0);
+  const sales=totalsAll.reduce((s,x)=>s+x.t.sale,0);
+  const profit=totalsAll.reduce((s,x)=>s+x.t.profit,0);
+
+  const di=document.getElementById('dashInventory'); if(di) di.textContent=available.length;
+  const dv=document.getElementById('dashInvested'); if(dv) dv.textContent=money(invested);
+  const ds=document.getElementById('dashSales'); if(ds) ds.textContent=money(sales);
+  const dp=document.getElementById('dashProfit'); if(dp){dp.textContent=money(profit);dp.style.color=profit<0?'#ff6262':'#39d353'}
+
+  const invList=document.getElementById('dashInventoryList');
+  if(invList){
+    invList.innerHTML='';
+    if(!available.length){
+      invList.innerHTML='<div class="empty-dash">Сейчас нет машин в наличии.</div>';
+    }else{
+      available.slice(0,8).forEach(c=>{
+        const t=totals(c),row=document.createElement('div');
+        row.className='dash-car';
+        row.onclick=()=>openCarDetail(c.id);
+        row.innerHTML=`<img src="${c.photo||placeholderPhoto()}">
+          <div><div class="dash-car-name">${c.name}</div>
+          <div class="dash-car-meta">${c.boughtAt||'—'} • ${formatDate(c.purchaseDate)} • ${c.status}</div></div>
+          <div class="dash-car-cost"><small>Себестоимость</small>${money(t.cost)}</div>`;
+        invList.appendChild(row);
+      });
+    }
+  }
+
+  const activities=[];
+  state.cars.forEach(c=>{
+    (c.expenses||[]).forEach(e=>activities.push({
+      date:e.date||'',type:'expense',title:e.description||e.category||'Расход',
+      meta:c.name,amount:Number(e.amount)||0
+    }));
+    if(c.sale){
+      activities.push({
+        date:c.soldDate||'',type:'sale',title:'Продана машина',meta:c.name,amount:Number(c.sale)||0
+      });
+    }
+  });
+  activities.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+
+  const act=document.getElementById('dashActivityList');
+  if(act){
+    act.innerHTML='';
+    if(!activities.length){
+      act.innerHTML='<div class="empty-dash">Действий пока нет.</div>';
+    }else{
+      activities.slice(0,8).forEach(a=>{
+        const row=document.createElement('div');
+        row.className='activity-item';
+        row.innerHTML=`<div class="activity-icon">${a.type==='sale'?'$':'+'}</div>
+          <div><div class="activity-title">${a.title}</div><div class="activity-meta">${a.meta} • ${formatDate(a.date)}</div></div>
+          <div class="activity-amount ${a.type==='sale'?'sale':'exp'}">${a.type==='sale'?'':'+'}${money(a.amount)}</div>`;
+        act.appendChild(row);
+      });
+    }
+  }
+}
+function renderCarsView(){
+  const grid=document.getElementById('carsGrid'); if(!grid)return;
+  grid.innerHTML='';
+  if(!state.cars.length){
+    grid.innerHTML='<div class="empty-dash">Машин пока нет.</div>';return;
+  }
+  state.cars.forEach(c=>{
+    const t=totals(c),card=document.createElement('div');
+    card.className='cars-grid-card';
+    card.onclick=()=>openCarDetail(c.id);
+    card.innerHTML=`<img src="${c.photo||placeholderPhoto()}">
+      <div class="cars-grid-body">
+        <div class="cars-grid-name">${c.name}</div>
+        <div class="cars-grid-row"><span>Статус</span><strong>${c.status}</strong></div>
+        <div class="cars-grid-row"><span>Дата покупки</span><strong>${formatDate(c.purchaseDate)}</strong></div>
+        <div class="cars-grid-row"><span>Себестоимость</span><strong>${money(t.cost)}</strong></div>
+        ${c.sale?`<div class="cars-grid-row"><span>Продажа</span><strong style="color:#39d353">${money(c.sale)}</strong></div>`:''}
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+function renderAllExpenses(){
+  const el=document.getElementById('allExpensesList'); if(!el)return;
+  const rows=[];
+  state.cars.forEach(c=>(c.expenses||[]).forEach(e=>rows.push({...e,carName:c.name,carId:c.id})));
+  rows.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  el.innerHTML='';
+  if(!rows.length){el.innerHTML='<div class="empty-dash">Расходов пока нет.</div>';return}
+  rows.forEach(e=>{
+    const row=document.createElement('div');row.className='all-expense-item';
+    row.onclick=()=>openCarDetail(e.carId);
+    row.innerHTML=`<div class="all-expense-date">${formatDate(e.date)}</div>
+      <div><div class="all-expense-desc">${e.description||e.category||'Расход'}</div><div class="all-expense-car">${e.carName}</div></div>
+      <div class="all-expense-car">${e.category||'Other'}</div>
+      <div class="all-expense-amount">${money(e.amount)}</div>`;
+    el.appendChild(row);
+  });
+}
+
 function render(){
   const list=document.getElementById('carList'); list.innerHTML='';
   state.cars.forEach(c=>{
@@ -1018,14 +1346,14 @@ function render(){
     }else{
       div.innerHTML=`<img class="thumb" src="${c.photo||placeholderPhoto()}"><div><div class="car-name">${c.name||'Без названия'}</div><div class="car-date">Дата: ${formatDate(c.purchaseDate)}</div><div class="car-sub">${saleLine}</div></div>`;
     }
-    div.onclick=()=>{state.selectedId=c.id;persist();render()};
+    div.onclick=()=>openCarDetail(c.id);
     list.appendChild(div);
   });
 
   const c=current();
   document.getElementById('emptyState').classList.toggle('hidden',!!c);
   document.getElementById('content').classList.toggle('hidden',!c);
-  if(!c){renderGlobal();return}
+  if(!c){renderGlobal();renderDashboard();renderCarsView();renderAllExpenses();applyActiveView();return}
 
   const t=totals(c);
   document.getElementById('carTitle').textContent=c.name||'Без названия';
@@ -1095,6 +1423,10 @@ function render(){
   if(eDate) eDate.value=todayISO();
 
   renderGlobal();
+  renderDashboard();
+  renderCarsView();
+  renderAllExpenses();
+  applyActiveView();
 }
 function renderGlobal(){
   const gCars=document.getElementById('gCars');
