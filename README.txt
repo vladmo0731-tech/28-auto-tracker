@@ -1,16 +1,9 @@
-28 Auto Tracker cloud dashboard v3
+28 Auto Tracker dashboard v4 mobile fix
 
-ROLLBACK:
-Previous cloud build is preserved separately:
-  /mnt/data/28-auto-tracker-cloud-supabase.zip
-Desktop/Mac v26 is also untouched.
-
-Changes in this experimental build:
-- Startup opens Dashboard, not a car.
-- Dashboard: inventory, invested, sales, profit, cars in stock, recent activity.
-- Dedicated Machines screen.
-- Dedicated all-expenses screen.
-- Mobile fixed nav: Главная / Машины / Расходы / Аналитика / Настройки.
-- Car detail still uses the existing v26 visual design.
-- Automatic retry for Supabase "JWT issued at future", including session refresh.
-- Service worker uses network-first for page navigation to reduce stale GitHub Pages HTML.
+Changes from v3:
+- mobile car detail sections forced to full width (removes large empty area)
+- automatic expense date field hidden on mobile
+- category / description / amount compacted
+- Add button aligned beside amount
+- desktop/Mac v26 baseline still untouched
+- Supabase cloud sync and Dashboard navigation retained
