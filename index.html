@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=9"/>
+  <link rel="stylesheet" href="./mobile.css?v=10"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -774,22 +774,16 @@
 </style>
 
 
-<style id="compactExpensesV9">
+<style id="compactExpensesV10">
 @media(max-width:900px){
-  .expenses-card tbody{
-    padding:8px 10px 12px!important;
-  }
+  .expenses-card tbody{padding:8px 10px 12px!important;}
 
   .expenses-card tr{
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) 88px 42px!important;
-    grid-template-rows:auto auto!important;
-    column-gap:10px!important;
-    row-gap:4px!important;
-    align-items:center!important;
-    padding:11px 12px!important;
+    display:block!important;
+    position:relative!important;
+    padding:12px 112px 12px 12px!important;
     margin-bottom:8px!important;
-    min-height:68px!important;
+    min-height:84px!important;
     background:#0d171f!important;
     border:1px solid #263743!important;
     border-radius:12px!important;
@@ -803,73 +797,65 @@
   }
 
   .expenses-card .expense-desc{
-    grid-column:1!important;
-    grid-row:1!important;
     font-size:14px!important;
     font-weight:800!important;
     color:#f0f4f7!important;
+    line-height:1.2!important;
+    margin-bottom:8px!important;
+    max-width:calc(100% - 4px)!important;
     white-space:nowrap!important;
     overflow:hidden!important;
     text-overflow:ellipsis!important;
-    line-height:1.15!important;
   }
 
-  .expenses-card .expense-date{
-    grid-column:1!important;
-    grid-row:2!important;
-    font-size:10px!important;
-    color:#84939f!important;
-    white-space:nowrap!important;
-  }
-
+  .expenses-card .expense-date,
   .expenses-card .expense-cat{
-    grid-column:1!important;
-    grid-row:2!important;
+    display:inline-block!important;
     font-size:10px!important;
-    color:#aab6bf!important;
+    color:#8ea0ad!important;
     white-space:nowrap!important;
-    margin-left:90px!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    max-width:calc(100% - 94px)!important;
+    vertical-align:middle!important;
   }
 
-  .expenses-card .expense-date::after{
-    content:" ·";
-    color:#65737e;
-    margin-left:2px;
-  }
+  .expenses-card .expense-date{margin-right:6px!important;}
+  .expenses-card .expense-date::after{content:" ·"; color:#65737e; margin-left:2px;}
+  .expenses-card .expense-cat{color:#aab6bf!important;}
 
   .expenses-card .money{
-    grid-column:2!important;
-    grid-row:1 / span 2!important;
-    align-self:center!important;
-    justify-self:end!important;
+    position:absolute!important;
+    right:60px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:auto!important;
+    max-width:72px!important;
     color:#ff6a55!important;
     font-size:15px!important;
     font-weight:850!important;
     text-align:right!important;
     white-space:nowrap!important;
-    width:88px!important;
     overflow:hidden!important;
     text-overflow:ellipsis!important;
+    line-height:1!important;
   }
 
   .expenses-card .expense-menu{
-    grid-column:3!important;
-    grid-row:1 / span 2!important;
-    align-self:center!important;
-    justify-self:end!important;
-    width:42px!important;
+    position:absolute!important;
+    right:12px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:40px!important;
+    height:40px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
   }
 
   .expenses-card .expense-menu button{
-    width:38px!important;
-    height:38px!important;
-    min-width:38px!important;
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
     padding:0!important;
-    border-radius:10px!important;
-    font-size:17px!important;
+    border-radius:12px!important;
     display:flex!important;
     align-items:center!important;
     justify-content:center!important;
@@ -2140,7 +2126,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=9"></script>
+  <script src="./mobile.js?v=10"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
