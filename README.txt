@@ -1,10 +1,8 @@
-28 Auto Tracker v7 compact mobile expenses
+28 Auto Tracker v8 mobile expense rows
 
 Changes:
-- expense list cards are now compact (~64 px)
-- description is primary line
-- category + date are secondary metadata
-- amount stays right aligned
-- 3-dot menu remains on right
-- removed decorative orange category icon from mobile expense rows
-- desktop/Mac baseline remains untouched
+- replaced 3-dot action with direct trash-can delete button
+- fixed amount overlap on the right side
+- added more spacing between amount and delete button
+- empty expense title falls back to "Расход"
+- bumped cache version for iPhone/PWA refresh
