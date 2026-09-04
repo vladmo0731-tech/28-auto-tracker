@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css"/>
+  <link rel="stylesheet" href="./mobile.css?v=6"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -701,6 +701,78 @@
 </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style id="mobileHardFixV5">
+@media(max-width:900px){
+  .expense-form{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 112px!important;
+    gap:8px!important;
+    align-items:end!important;
+    padding:10px 12px 12px!important;
+  }
+  .expense-category-field{grid-column:1/-1!important}
+  .expense-description-field{grid-column:1/-1!important}
+  .expense-amount-field{grid-column:1/2!important}
+  .expense-form>button{grid-column:2/3!important;width:100%!important;height:42px!important}
+  #eCategory,#eDescription,#eAmount{width:100%!important}
+  .overview,.info-grid,.stats,.summary-side,.body-grid,.expenses-card{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+  }
+  .overview{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+  .info-grid{display:grid!important;grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:390px){
+  .expense-form{grid-template-columns:minmax(0,1fr) 104px!important}
+}
+</style>
+
+
+<style id="pwaSafeAreaV6">
+@media(max-width:900px){
+  html{
+    background:#07111a!important;
+  }
+  body{
+    padding-top:env(safe-area-inset-top)!important;
+    padding-left:env(safe-area-inset-left)!important;
+    padding-right:env(safe-area-inset-right)!important;
+    padding-bottom:env(safe-area-inset-bottom)!important;
+    background:#07111a!important;
+  }
+  main{
+    padding-top:14px!important;
+  }
+
+  /* Standalone mode: keep content below Dynamic Island / status bar */
+  @media(display-mode: standalone){
+    body{
+      padding-top:calc(env(safe-area-inset-top) + 8px)!important;
+    }
+    main{
+      padding-top:10px!important;
+    }
+    #mobileNav{
+      padding-bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    }
+  }
+
+  /* iOS home-screen app fallback */
+  body.standalone-ios{
+    padding-top:calc(env(safe-area-inset-top) + 8px)!important;
+  }
+  body.standalone-ios #mobileNav{
+    padding-bottom:calc(8px + env(safe-area-inset-bottom))!important;
+  }
+
+  .title h1{
+    margin-top:0!important;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -894,16 +966,16 @@
           </div>
 
           <div class="expense-form">
-            <div class="expense-auto-date"><label>Дата</label><input id="eDate" type="date" readonly title="Дата ставится автоматически"><div class="small">Дата добавится автоматически</div></div>
-            <div>
+            <input id="eDate" type="hidden">
+            <div class="expense-category-field">
               <label>Категория</label>
               <select id="eCategory">
                 <option>Parts</option><option>Body</option><option>Paint</option><option>Mechanical</option>
                 <option>Delivery</option><option>Auction fee</option><option>DMV</option><option>Other</option>
               </select>
             </div>
-            <div><label>Что купил / работа</label><input id="eDescription" placeholder="например: bumper"></div>
-            <div><label>Сумма</label><input id="eAmount" type="number" step="0.01" placeholder="0"></div>
+            <div class="expense-description-field"><label>Что купил / работа</label><input id="eDescription" placeholder="например: bumper"></div>
+            <div class="expense-amount-field"><label>Сумма</label><input id="eAmount" type="number" step="0.01" placeholder="0"></div>
             <button class="primary" onclick="addExpense()">Добавить</button>
           </div>
 
@@ -1960,11 +2032,24 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js"></script>
+  <script src="./mobile.js?v=6"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
   </script>
+
+<script>
+(function(){
+  const isIOSStandalone = window.navigator.standalone === true;
+  const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+  if(isIOSStandalone || isStandalone){
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.body.classList.add('standalone-ios');
+    });
+  }
+})();
+</script>
+
 </body>
 </html>

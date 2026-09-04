@@ -1,5 +1,5 @@
-const CACHE='28-auto-tracker-dashboard-v4';
-const STATIC=['./mobile.css','./mobile.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='28-auto-tracker-dashboard-v6';
+const STATIC=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
