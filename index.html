@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=6"/>
+  <link rel="stylesheet" href="./mobile.css?v=7"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -773,6 +773,95 @@
 }
 </style>
 
+
+<style id="compactExpensesV7">
+@media(max-width:900px){
+  .expenses-card tbody{
+    padding:8px 10px 12px!important;
+  }
+  .expenses-card tr{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto auto!important;
+    grid-template-areas:
+      "desc amount menu"
+      "meta amount menu"!important;
+    align-items:center!important;
+    gap:3px 8px!important;
+    padding:10px 11px!important;
+    margin-bottom:7px!important;
+    min-height:64px!important;
+    background:#0d171f!important;
+    border:1px solid #263743!important;
+    border-radius:10px!important;
+  }
+
+  .expenses-card td{
+    display:block!important;
+    border:0!important;
+    padding:0!important;
+    min-width:0!important;
+  }
+
+  .expenses-card .expense-desc{
+    grid-area:desc!important;
+    font-size:14px!important;
+    font-weight:800!important;
+    color:#f0f4f7!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    line-height:1.15!important;
+  }
+
+  .expenses-card .expense-date{
+    grid-area:meta!important;
+    font-size:10px!important;
+    color:#84939f!important;
+    margin-top:2px!important;
+  }
+
+  .expenses-card .expense-cat{
+    grid-area:meta!important;
+    font-size:10px!important;
+    color:#aab6bf!important;
+    margin-left:74px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  .expenses-card .expense-date::after{
+    content:" ·";
+    margin-left:2px;
+    color:#65737e;
+  }
+
+  .expenses-card .money{
+    grid-area:amount!important;
+    align-self:center!important;
+    color:#ff6a55!important;
+    font-size:15px!important;
+    font-weight:850!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+    padding-left:8px!important;
+  }
+
+  .expenses-card .expense-menu{
+    grid-area:menu!important;
+    align-self:center!important;
+  }
+
+  .expenses-card .expense-menu button{
+    width:34px!important;
+    height:34px!important;
+    padding:0!important;
+    border-radius:9px!important;
+    font-size:18px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -1448,7 +1537,7 @@ function render(){
     const cat=String(e.category||'').toLowerCase();
     const catClass=cat.includes('auction')?'cat-fee':cat.includes('delivery')?'cat-transport':cat.includes('paint')?'cat-detail':cat.includes('dmv')?'cat-reg':'cat-repair';
     const catIcon=`<span class="cat-icon ${catClass}"><svg viewBox="0 0 24 24" fill="none"><path d="M6 12h12M12 6v12"/></svg></span>`;
-    tr.innerHTML=`<td>${e.date||'—'}</td><td><span class="expense-category">${catIcon}${e.category||''}</span></td><td>${e.description||''}</td><td class="money">${money(e.amount)}</td><td><button class="secondary" style="padding:5px 8px" onclick="removeExpense('${e.id}')">⋮</button></td>`;
+    tr.innerHTML=`<td class="expense-date">${formatDate(e.date)||'—'}</td><td class="expense-cat">${e.category||''}</td><td class="expense-desc">${e.description||''}</td><td class="money">${money(e.amount)}</td><td class="expense-menu"><button class="secondary" style="padding:5px 8px" onclick="removeExpense('${e.id}')">⋮</button></td>`;
     tb.appendChild(tr);
   });
 
@@ -2032,7 +2121,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=6"></script>
+  <script src="./mobile.js?v=7"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
