@@ -570,10 +570,60 @@
       .mobile-nav button{border:0;background:transparent;color:#d9e1e7;padding:10px 4px;font-weight:700}
       .modal-grid{grid-template-columns:1fr}.modal-grid .full{grid-column:auto}
     }
-  </style>
+  
+    .auth-overlay{
+      position:fixed;inset:0;z-index:500;
+      display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at 50% 0%,#102331 0%,#07111a 48%,#050b10 100%);
+      padding:18px;
+    }
+    .auth-card{
+      width:min(420px,100%);
+      background:linear-gradient(180deg,#111c26,#0d171f);
+      border:1px solid #314450;border-radius:18px;
+      padding:24px;box-shadow:0 28px 90px rgba(0,0,0,.55);
+    }
+    .auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+    .auth-logo{
+      width:50px;height:50px;border-radius:12px;display:grid;place-items:center;
+      background:#17130d;border:1px solid #5b3900;color:#ff9f0a;font-size:20px;font-weight:900
+    }
+    .auth-card h1{font-size:23px;margin:0}
+    .auth-card .auth-sub{font-size:13px;color:#95a4b0;margin-top:3px}
+    .auth-card label{font-size:12px;color:#9caab5;margin-top:12px}
+    .auth-card input{height:46px;margin-top:5px}
+    .auth-card .primary{width:100%;height:46px;margin-top:18px}
+    .auth-error{min-height:18px;margin-top:10px;color:#ff7777;font-size:12px}
+    .cloud-badge{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;
+      background:#0e3420;color:#55df79;font-size:11px;font-weight:800
+    }
+    .cloud-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#39d353}
 
+</style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">28</div>
+      <div>
+        <h1>28 Auto Tracker</h1>
+        <div class="auth-sub">Вход в общую базу машин</div>
+      </div>
+    </div>
+    <label>Email</label>
+    <input id="authEmail" type="email" autocomplete="username" placeholder="email">
+    <label>Пароль</label>
+    <input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button class="primary" onclick="signIn()">Войти</button>
+    <div id="authError" class="auth-error"></div>
+  </div>
+</div>
+
 <div class="app">
   <aside>
     <div class="logo-wrap">
@@ -582,7 +632,7 @@
       </div>
       <div>
         <div class="logo">28 Auto Tracker</div>
-        <div class="muted">Учёт машин и расходов</div>
+        <div class="muted">Учёт машин и расходов</div><div id="cloudStatus" class="cloud-badge" style="margin-top:6px">Cloud</div>
       </div>
     </div>
 
@@ -811,44 +861,109 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'autoTracker28_v2';
+const SUPABASE_URL = "https://poiyahvywavmcdlhatch.supabase.co";
+const SUPABASE_KEY = "sb_publishable_poWdCg_EZU0mgGqwPevNxg_hnBVkD4c";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let editingId = null;
 let pendingPhoto = '';
+let pendingPhotoBlob = null;
+let sessionUser = null;
+let state = {cars:[], selectedId: localStorage.getItem('28SelectedCar') || null};
 
-let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {
-  cars: [{
-    id: uid(),
-    name: 'Corolla 2021',
-    status: 'Продана',
-    vin: '',
-    boughtAt: 'Copart',
-    lot: '',
-    purchase: 12398,
-    purchaseDate: new Date().toISOString().slice(0,10),
-    sale: 18575,
-    photo: '',
-    expenses: [
-      ['','Parts','bumper',230],['','Parts','fender',65],['','Parts','hood',160],
-      ['','Parts','hinges',36],['','Parts','radiator support',115],['','Parts','tires',328],
-      ['','Delivery','delivery',150],['','Parts','light',93],['','Paint','paint',2000],
-      ['','Parts','steering wheel',130],['','Parts','battery',100],['','Other','misc',176]
-    ].map(x=>({id:uid(),date:x[0],category:x[1],description:x[2],amount:x[3]}))
-  }],
-  selectedId: null
-};
-if (!state.selectedId && state.cars.length) state.selectedId = state.cars[0].id;
-
-// Migration for older saved cars: if purchase date is missing,
-// set it once to today's date so it is visible in Inventory and on the card.
-let migratedPurchaseDates = false;
-state.cars.forEach(c=>{
-  if(!c.purchaseDate){
-    c.purchaseDate = new Date().toISOString().slice(0,10);
-    migratedPurchaseDates = true;
+async function signIn(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  const err=document.getElementById('authError');
+  err.textContent='';
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){
+    err.textContent=error.message;
+    return;
   }
-});
-if(migratedPurchaseDates){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  sessionUser=data.user;
+  document.getElementById('authOverlay').classList.add('hidden');
+  await loadCloudData();
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  sessionUser=null;
+  state={cars:[],selectedId:null};
+  render();
+  document.getElementById('authOverlay').classList.remove('hidden');
+}
+
+async function initAuth(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session?.user){
+    sessionUser=session.user;
+    document.getElementById('authOverlay').classList.add('hidden');
+    await loadCloudData();
+  } else {
+    document.getElementById('authOverlay').classList.remove('hidden');
+  }
+  sb.auth.onAuthStateChange(async (_event,session)=>{
+    sessionUser=session?.user||null;
+    if(sessionUser){
+      document.getElementById('authOverlay').classList.add('hidden');
+      await loadCloudData();
+    }
+  });
+}
+
+async function getSignedPhoto(path){
+  if(!path) return '';
+  const {data,error}=await sb.storage.from('car-photos').createSignedUrl(path,3600);
+  if(error) return '';
+  return data.signedUrl||'';
+}
+
+async function loadCloudData(){
+  if(!sessionUser) return;
+  const [carsRes,expRes]=await Promise.all([
+    sb.from('cars').select('*').order('created_at',{ascending:false}),
+    sb.from('expenses').select('*').order('created_at',{ascending:true})
+  ]);
+  if(carsRes.error){ alert('Ошибка загрузки машин: '+carsRes.error.message); return; }
+  if(expRes.error){ alert('Ошибка загрузки расходов: '+expRes.error.message); return; }
+
+  const expensesByCar={};
+  (expRes.data||[]).forEach(e=>{
+    (expensesByCar[e.car_id] ||= []).push({
+      id:e.id,
+      date:e.expense_date,
+      category:e.category||'Other',
+      description:e.description||'',
+      amount:Number(e.amount)||0
+    });
+  });
+
+  const cars=[];
+  for(const c of (carsRes.data||[])){
+    const photo=await getSignedPhoto(c.photo_url);
+    cars.push({
+      id:c.id,
+      name:c.name||'Без названия',
+      vin:c.vin||'',
+      boughtAt:c.bought_at||'',
+      purchaseDate:c.purchase_date||'',
+      purchase:Number(c.purchase_price)||0,
+      status:c.status||'Куплена',
+      sale:Number(c.sale_price)||0,
+      soldDate:c.sold_date||'',
+      floorPayoff:Number(c.floorplan_payoff)||0,
+      photoPath:c.photo_url||'',
+      photo,
+      expenses:expensesByCar[c.id]||[]
+    });
+  }
+  state.cars=cars;
+  if(!state.selectedId || !state.cars.some(c=>c.id===state.selectedId)){
+    state.selectedId=state.cars[0]?.id||null;
+  }
+  persist();
+  render();
 }
 
 function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n)||0)}
@@ -868,18 +983,20 @@ function uid(){
 }
 function persist(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+    if(state.selectedId) localStorage.setItem('28SelectedCar',state.selectedId);
+    else localStorage.removeItem('28SelectedCar');
     return true;
-  }catch(err){
-    console.error(err);
-    alert('Не удалось сохранить данные. Скорее всего фото слишком большое. Попробуй выбрать другое фото.');
-    return false;
-  }
+  }catch(e){return false}
 }
 function totals(c){
   const expenses=(c.expenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const purchase=Number(c.purchase)||0, sale=Number(c.sale)||0, cost=purchase+expenses;
-  return {expenses,purchase,sale,cost,profit:sale? sale-cost : 0};
+  const purchase=Number(c.purchase)||0;
+  const floorPayoff=Number(c.floorPayoff)||0;
+  const floorFee=floorPayoff>0?Math.max(0,floorPayoff-purchase):0;
+  const acquisition=floorPayoff>0?floorPayoff:purchase;
+  const sale=Number(c.sale)||0;
+  const cost=acquisition+expenses;
+  return {expenses,purchase,floorPayoff,floorFee,cost,sale,profit:sale?sale-cost:0};
 }
 function placeholderPhoto(){
   return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><rect width='100%' height='100%' fill='#e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='34' fill='#6b7280'>No photo</text></svg>`);
@@ -989,7 +1106,7 @@ function renderGlobal(){
   document.getElementById('gProfit').textContent=money(all.reduce((s,t)=>s+t.profit,0));
 }
 function openAddCar(){
-  editingId=null; pendingPhoto='';
+  editingId=null; pendingPhoto=''; pendingPhotoBlob=null;
   document.getElementById('modalTitle').textContent='Добавить машину';
   document.getElementById('mStatus').closest('div').style.display='none';
   ['mName','mVin','mPurchase'].forEach(id=>document.getElementById(id).value='');
@@ -1002,7 +1119,7 @@ function openAddCar(){
 }
 function editCurrentCar(){
   const c=current(); if(!c)return;
-  editingId=c.id; pendingPhoto=c.photo||'';
+  editingId=c.id; pendingPhoto=c.photo||''; pendingPhotoBlob=null;
   document.getElementById('modalTitle').textContent='Редактировать машину';
   document.getElementById('mStatus').closest('div').style.display='';
   document.getElementById('mName').value=c.name||'';
@@ -1063,106 +1180,122 @@ function openSoldModal(){
 function closeSoldModal(){
   document.getElementById('soldModal').classList.add('hidden');
 }
-function confirmSold(){
-  const c=current();
-  if(!c) return;
-
+async function confirmSold(){
+  const c=current(); if(!c)return;
   const floorPayoff=Number(document.getElementById('soldFloorPayoff').value);
   const sale=Number(document.getElementById('soldAmount').value);
-
-  if(!floorPayoff || floorPayoff<=0){
-    alert('Укажи полную сумму floorplan payoff с учетом комиссии.');
-    return;
-  }
-  if(!sale || sale<=0){
-    alert('Укажи продажную стоимость машины.');
-    return;
-  }
-
-  c.previousStatus=c.status||'Куплена';
-  c.floorPayoff=floorPayoff;
-  c.sale=sale;
-  c.status='Продана';
-  c.soldDate=todayISO();
-
-  if(persist()){
-    closeSoldModal();
-    render();
-  }
+  if(!floorPayoff || floorPayoff<=0){alert('Укажи полную сумму floorplan payoff с учетом комиссии.');return}
+  if(!sale || sale<=0){alert('Укажи продажную стоимость машины.');return}
+  const {error}=await sb.from('cars').update({
+    floorplan_payoff:floorPayoff,
+    sale_price:sale,
+    status:'Продана',
+    sold_date:todayISO(),
+    updated_at:new Date().toISOString()
+  }).eq('id',c.id);
+  if(error){alert('Ошибка продажи: '+error.message);return}
+  closeSoldModal();
+  await loadCloudData();
 }
-function undoSold(){
-  const c=current();
-  if(!c || c.status!=='Продана') return;
-  if(!confirm('Отменить продажу этой машины? Продажная стоимость и данные floorplan будут удалены.')) return;
-
-  c.status=c.previousStatus||'Куплена';
-  c.sale=0;
-  c.floorPayoff=0;
-  c.soldDate='';
-  delete c.previousStatus;
-
-  if(persist()) render();
+async function undoSold(){
+  const c=current(); if(!c || c.status!=='Продана')return;
+  if(!confirm('Отменить продажу этой машины? Продажная стоимость и данные floorplan будут удалены.'))return;
+  const {error}=await sb.from('cars').update({
+    status:'Куплена',
+    sale_price:null,
+    sold_date:null,
+    floorplan_payoff:null,
+    updated_at:new Date().toISOString()
+  }).eq('id',c.id);
+  if(error){alert('Ошибка отмены продажи: '+error.message);return}
+  await loadCloudData();
 }
 function previewPhoto(event){
   const file=event.target.files[0];
-  if(!file)return;
-
+  if(!file) return;
   const reader=new FileReader();
   reader.onload=()=>{
     const img=new Image();
     img.onload=()=>{
-      const maxW=1200, maxH=800;
-      let w=img.width, h=img.height;
+      const maxW=1400,maxH=1000;
+      let w=img.width,h=img.height;
       const scale=Math.min(1,maxW/w,maxH/h);
-      w=Math.round(w*scale);
-      h=Math.round(h*scale);
-
+      w=Math.round(w*scale);h=Math.round(h*scale);
       const canvas=document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-
-      pendingPhoto=canvas.toDataURL('image/jpeg',0.72);
-      document.getElementById('photoPreview').src=pendingPhoto;
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      canvas.toBlob(blob=>{
+        pendingPhotoBlob=blob;
+        pendingPhoto=URL.createObjectURL(blob);
+        document.getElementById('photoPreview').src=pendingPhoto;
+      },'image/jpeg',0.78);
     };
-    img.onerror=()=>alert('Не удалось прочитать фото.');
     img.src=reader.result;
   };
   reader.readAsDataURL(file);
 }
-function saveModalCar(){
+
+async function uploadCarPhoto(carId,oldPath=''){
+  if(!pendingPhotoBlob || !sessionUser) return oldPath||'';
+  const path=`${sessionUser.id}/${carId}/${Date.now()}.jpg`;
+  const {error}=await sb.storage.from('car-photos').upload(path,pendingPhotoBlob,{
+    contentType:'image/jpeg',
+    upsert:false
+  });
+  if(error) throw error;
+  if(oldPath && oldPath!==path){
+    await sb.storage.from('car-photos').remove([oldPath]).catch(()=>{});
+  }
+  return path;
+}
+
+async function saveModalCar(){
   const btn=document.getElementById('saveCarBtn');
   btn.disabled=true;
   btn.textContent='Сохраняю...';
   try{
-  const name=document.getElementById('mName').value.trim();
-  const vin=document.getElementById('mVin').value.trim();
-  const purchase=Number(document.getElementById('mPurchase').value);
-  const boughtAt=document.getElementById('mBoughtAt').value.trim();
-  if(!name || !purchase || !boughtAt){
-    alert('Заполни обязательные поля: название машины, сумма покупки и площадка.');
-    return;
-  }
-  if(editingId){
-    const c=state.cars.find(x=>x.id===editingId);
-    Object.assign(c,{
-      name,vin,purchase,boughtAt,photo:pendingPhoto,
-      status:c.status==='Продана' ? 'Продана' : document.getElementById('mStatus').value
-    });
-  } else {
-    const c={
-      id:uid(), name, vin, purchase, boughtAt, photo:pendingPhoto,
-      purchaseDate:new Date().toISOString().slice(0,10),
-      sale:0,
-      status:'Куплена',
-      expenses:[]
-    };
-    state.cars.push(c); state.selectedId=c.id;
-  }
-  if(persist()){
+    const name=document.getElementById('mName').value.trim();
+    const vin=document.getElementById('mVin').value.trim();
+    const purchase=Number(document.getElementById('mPurchase').value);
+    const boughtAt=document.getElementById('mBoughtAt').value.trim();
+    if(!name || !purchase || !boughtAt){
+      alert('Заполни обязательные поля: название машины, сумма покупки и площадка.');
+      return;
+    }
+    if(!sessionUser) throw new Error('Нет активной сессии');
+
+    if(editingId){
+      const old=state.cars.find(x=>x.id===editingId);
+      let photoPath=old?.photoPath||'';
+      photoPath=await uploadCarPhoto(editingId,photoPath);
+
+      const payload={
+        name, vin:vin||null, purchase_price:purchase, bought_at:boughtAt,
+        status:old?.status==='Продана'?'Продана':document.getElementById('mStatus').value,
+        photo_url:photoPath||null,
+        updated_at:new Date().toISOString()
+      };
+      const {error}=await sb.from('cars').update(payload).eq('id',editingId);
+      if(error) throw error;
+    }else{
+      const payload={
+        user_id:sessionUser.id,
+        name, vin:vin||null, purchase_price:purchase, bought_at:boughtAt,
+        purchase_date:todayISO(), status:'Куплена'
+      };
+      const {data,error}=await sb.from('cars').insert(payload).select().single();
+      if(error) throw error;
+      let photoPath='';
+      if(pendingPhotoBlob){
+        photoPath=await uploadCarPhoto(data.id,'');
+        const {error:photoErr}=await sb.from('cars').update({photo_url:photoPath}).eq('id',data.id);
+        if(photoErr) throw photoErr;
+      }
+      state.selectedId=data.id;
+    }
+    persist();
     closeModal();
-    render();
-  }
+    await loadCloudData();
   }catch(err){
     console.error(err);
     alert('Ошибка при сохранении машины: '+(err.message||err));
@@ -1171,36 +1304,80 @@ function saveModalCar(){
     btn.textContent='Сохранить машину';
   }
 }
-function addExpense(){
+async function addExpense(){
   const c=current(); if(!c)return;
   const amount=Number(document.getElementById('eAmount').value);
   const description=document.getElementById('eDescription').value.trim();
   if(!description || !amount){alert('Укажи описание и сумму');return}
-  c.expenses.push({id:uid(),date:todayISO(),category:document.getElementById('eCategory').value,description,amount});
+  const {error}=await sb.from('expenses').insert({
+    car_id:c.id,
+    expense_date:todayISO(),
+    category:document.getElementById('eCategory').value,
+    description,
+    amount
+  });
+  if(error){alert('Ошибка добавления расхода: '+error.message);return}
   document.getElementById('eDescription').value='';
   document.getElementById('eAmount').value='';
-  document.getElementById('eDate').value=todayISO();
-  if(persist()) render();
+  await loadCloudData();
 }
-function removeExpense(id){
-  const c=current(); c.expenses=c.expenses.filter(e=>e.id!==id);
-  if(persist()) render();
+async function removeExpense(id){
+  if(!confirm('Удалить этот расход?')) return;
+  const {error}=await sb.from('expenses').delete().eq('id',id);
+  if(error){alert('Ошибка удаления расхода: '+error.message);return}
+  await loadCloudData();
 }
-function deleteCar(){
+async function deleteCar(){
   const c=current(); if(!c)return;
   if(!confirm(`Удалить "${c.name}"?`))return;
-  state.cars=state.cars.filter(x=>x.id!==c.id);
-  state.selectedId=state.cars[0]?.id||null;
-  persist();render();
+  if(c.photoPath) await sb.storage.from('car-photos').remove([c.photoPath]).catch(()=>{});
+  const {error}=await sb.from('cars').delete().eq('id',c.id);
+  if(error){alert('Ошибка удаления машины: '+error.message);return}
+  state.selectedId=null;
+  persist();
+  await loadCloudData();
 }
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='28-auto-tracker-backup.json';a.click();URL.revokeObjectURL(a.href);
 }
-function importData(event){
+async function importData(event){
   const file=event.target.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{try{state=JSON.parse(reader.result);persist();render()}catch(e){alert('Не удалось прочитать backup')}};reader.readAsText(file);
+  reader.onload=async()=>{
+    try{
+      const oldState=JSON.parse(reader.result);
+      if(!confirm(`Импортировать ${oldState.cars?.length||0} машин в облачную базу?`))return;
+      for(const car of (oldState.cars||[])){
+        const {data:newCar,error}=await sb.from('cars').insert({
+          user_id:sessionUser.id,
+          name:car.name||'Без названия',
+          vin:car.vin||null,
+          bought_at:car.boughtAt||'Other',
+          purchase_date:car.purchaseDate||todayISO(),
+          purchase_price:Number(car.purchase)||0,
+          status:car.status||'Куплена',
+          sale_price:Number(car.sale)||null,
+          sold_date:car.soldDate||null,
+          floorplan_payoff:Number(car.floorPayoff)||null
+        }).select().single();
+        if(error) throw error;
+        for(const e of (car.expenses||[])){
+          const {error:ee}=await sb.from('expenses').insert({
+            car_id:newCar.id,
+            expense_date:e.date||todayISO(),
+            category:e.category||'Other',
+            description:e.description||'Expense',
+            amount:Number(e.amount)||0
+          });
+          if(ee) throw ee;
+        }
+      }
+      await loadCloudData();
+      alert('Импорт завершён.');
+    }catch(e){alert('Ошибка импорта: '+e.message)}
+  };
+  reader.readAsText(file);
 }
 
 function toggleMoreMenu(ev){
@@ -1443,12 +1620,13 @@ function openSettings(){
   openSectionModal('Настройки',`
     <div class="report-list">
       <div class="setting-row"><div><strong>Валюта</strong><div class="small">Сейчас используется USD</div></div><select disabled><option>USD ($)</option></select></div>
-      <div class="setting-row"><div><strong>Хранение данных</strong><div class="small">Данные сохраняются локально в браузере</div></div><span class="status-pill">Включено</span></div>
+      <div class="setting-row"><div><strong>Хранение данных</strong><div class="small">Supabase Cloud — синхронизация Mac ↔ iPhone</div></div><span class="status-pill">Cloud</span></div>
+      <div class="setting-row"><div><strong>Аккаунт</strong><div class="small">${sessionUser?.email||''}</div></div><button class="secondary" onclick="signOut();closeSectionModal()">Выйти</button></div>
       <div class="setting-row"><div><strong>Backup</strong><div class="small">Сохрани копию базы перед переносом на другой компьютер</div></div><button class="secondary" onclick="exportData()">Создать backup</button></div>
     </div>`);
 }
 
-render();
+initAuth();
 </script>
   <script src="./mobile.js"></script>
   <script>

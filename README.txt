@@ -1,22 +1,17 @@
-28 Auto Tracker — единая web/PWA версия
+28 Auto Tracker — Supabase Cloud version
 
-Desktop:
-- основан на Mac/Desktop v26;
-- desktop-разметка и стили v26 не меняются;
-- mobile.css применяется только до 900px;
-- mobile.js на desktop сразу прекращает работу и не меняет DOM.
+This version:
+- uses Supabase Auth for login
+- stores cars and expenses in Supabase
+- stores photos in private bucket `car-photos`
+- syncs Mac and iPhone
+- keeps desktop layout from v26 and mobile.css for iPhone
 
-iPhone:
-- открывайте GitHub Pages URL в Safari;
-- Share → Add to Home Screen;
-- после этого приложение запускается как standalone PWA.
+Upload all files to the ROOT of the same GitHub repository, replacing existing files.
 
-GitHub Pages:
-1. Загрузите ВСЕ файлы этой папки в корень repository.
-2. Settings → Pages.
-3. Deploy from a branch → main → /root.
-4. Откройте выданный HTTPS URL.
+Login with the Supabase user you created.
 
-Важно:
-данные пока сохраняются в localStorage конкретного браузера.
-Для общей синхронизации Mac ↔ iPhone нужен следующий шаг: облачная база (Supabase/Firebase).
+Security:
+- only the publishable key is in frontend code
+- RLS policies must be enabled on cars/expenses/storage
+- never put service_role or database password in GitHub

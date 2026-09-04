@@ -1,4 +1,4 @@
-const CACHE='28-auto-tracker-web-v1';
+const CACHE='28-auto-tracker-cloud-v2';
 const ASSETS=['./','./index.html','./mobile.css','./mobile.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
