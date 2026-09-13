@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=11"/>
+  <link rel="stylesheet" href="./mobile.css?v=12"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -1285,10 +1285,9 @@ async function loadCloudData(){
     });
   });
 
-  const cars=[];
-  for(const c of (carsRes.data||[])){
+  const cars=await Promise.all((carsRes.data||[]).map(async c=>{
     const photo=await getSignedPhoto(c.photo_url);
-    cars.push({
+    return {
       id:c.id,
       name:c.name||'Без названия',
       vin:c.vin||'',
@@ -1302,8 +1301,8 @@ async function loadCloudData(){
       photoPath:c.photo_url||'',
       photo,
       expenses:expensesByCar[c.id]||[]
-    });
-  }
+    };
+  }));
 
   state.cars=cars;
   if(!state.selectedId || !state.cars.some(c=>c.id===state.selectedId)){
@@ -1719,7 +1718,7 @@ async function confirmSold(){
   c.soldDate=soldDate;
   closeSoldModal();
   refreshUIImmediately();
-  syncCloudSoon();
+  syncCloudSoon(2500);
 }
 async function undoSold(){
   const c=current(); if(!c || c.status!=='Продана')return;
@@ -1740,7 +1739,7 @@ async function undoSold(){
   c.soldDate='';
   c.floorPayoff=0;
   refreshUIImmediately();
-  syncCloudSoon();
+  syncCloudSoon(2500);
 }
 function previewPhoto(event){
   const file=event.target.files[0];
@@ -1829,10 +1828,34 @@ async function saveModalCar(){
 
       closeModal();
       refreshUIImmediately();
-      syncCloudSoon(700);
+      syncCloudSoon(2500);
 
     }else{
       const purchaseDate=todayISO();
+      const tempId='temp_car_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+
+      const newCar={
+        id:tempId,
+        name,
+        vin,
+        boughtAt,
+        purchaseDate,
+        purchase,
+        status:'Куплена',
+        sale:0,
+        soldDate:'',
+        floorPayoff:0,
+        photoPath:'',
+        photo:pendingPhoto||'',
+        expenses:[]
+      };
+
+      // OPTIMISTIC UI: card appears immediately.
+      state.cars.unshift(newCar);
+      state.selectedId=tempId;
+      closeModal();
+      refreshUIImmediately();
+
       const payload={
         user_id:sessionUser.id,
         name,
@@ -1844,32 +1867,24 @@ async function saveModalCar(){
       };
 
       const {data,error}=await sb.from('cars').insert(payload).select().single();
-      if(error) throw error;
+      if(error){
+        state.cars=state.cars.filter(x=>x.id!==tempId);
+        state.selectedId=state.cars[0]?.id||null;
+        refreshUIImmediately();
+        throw error;
+      }
 
-      const newCar={
-        id:data.id,
-        name:data.name||name,
-        vin:data.vin||vin,
-        boughtAt:data.bought_at||boughtAt,
-        purchaseDate:data.purchase_date||purchaseDate,
-        purchase:Number(data.purchase_price ?? purchase),
-        status:data.status||'Куплена',
-        sale:0,
-        soldDate:'',
-        floorPayoff:0,
-        photoPath:'',
-        photo:'',
-        expenses:[]
-      };
-
-      // New car appears immediately after the database confirms insert.
-      state.cars.unshift(newCar);
-      state.selectedId=newCar.id;
-
-      closeModal();
+      // Replace temporary ID with the real database ID.
+      newCar.id=data.id;
+      if(state.selectedId===tempId) state.selectedId=data.id;
+      newCar.name=data.name||name;
+      newCar.vin=data.vin||vin;
+      newCar.boughtAt=data.bought_at||boughtAt;
+      newCar.purchaseDate=data.purchase_date||purchaseDate;
+      newCar.purchase=Number(data.purchase_price ?? purchase);
+      newCar.status=data.status||'Куплена';
       refreshUIImmediately();
 
-      // Photo can finish after the card is already visible.
       if(pendingPhotoBlob){
         try{
           const photoPath=await uploadCarPhoto(newCar.id,'');
@@ -1884,7 +1899,7 @@ async function saveModalCar(){
         }
       }
 
-      syncCloudSoon(700);
+      syncCloudSoon(2500);
     }
 
   }catch(err){
@@ -1903,6 +1918,22 @@ async function addExpense(){
   if(!description || !amount){alert('Укажи описание и сумму');return}
 
   const expenseDate=todayISO();
+  const tempId='temp_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const optimisticExpense={
+    id:tempId,
+    date:expenseDate,
+    category,
+    description,
+    amount
+  };
+
+  // OPTIMISTIC UI: show immediately, before waiting for Supabase.
+  c.expenses ||= [];
+  c.expenses.push(optimisticExpense);
+  document.getElementById('eDescription').value='';
+  document.getElementById('eAmount').value='';
+  refreshUIImmediately();
+
   const {data,error}=await sb.from('expenses').insert({
     car_id:c.id,
     expense_date:expenseDate,
@@ -1911,22 +1942,26 @@ async function addExpense(){
     amount
   }).select().single();
 
-  if(error){alert('Ошибка добавления расхода: '+error.message);return}
+  if(error){
+    // Roll back optimistic row if save failed.
+    c.expenses=(c.expenses||[]).filter(e=>e.id!==tempId);
+    refreshUIImmediately();
+    alert('Ошибка добавления расхода: '+error.message);
+    return;
+  }
 
-  // Show it immediately without waiting for a second cloud fetch.
-  c.expenses ||= [];
-  c.expenses.push({
-    id:data?.id || ('temp_'+Date.now()),
-    date:data?.expense_date || expenseDate,
-    category:data?.category || category,
-    description:data?.description || description,
-    amount:Number(data?.amount ?? amount)
-  });
-
-  document.getElementById('eDescription').value='';
-  document.getElementById('eAmount').value='';
+  const saved=(c.expenses||[]).find(e=>e.id===tempId);
+  if(saved){
+    saved.id=data?.id || tempId;
+    saved.date=data?.expense_date || expenseDate;
+    saved.category=data?.category || category;
+    saved.description=data?.description || description;
+    saved.amount=Number(data?.amount ?? amount);
+  }
   refreshUIImmediately();
-  syncCloudSoon();
+
+  // Reconcile later; do not block the UI.
+  syncCloudSoon(2500);
 }
 async function removeExpense(id){
   if(!confirm('Удалить этот расход?')) return;
@@ -1936,7 +1971,7 @@ async function removeExpense(id){
 
   if(c) c.expenses=(c.expenses||[]).filter(e=>e.id!==id);
   refreshUIImmediately();
-  syncCloudSoon();
+  syncCloudSoon(2500);
 }
 async function deleteCar(){
   const c=current(); if(!c)return;
@@ -1950,7 +1985,7 @@ async function deleteCar(){
   state.selectedId=state.cars[0]?.id||null;
   if(activeView==='detail' && !state.selectedId) activeView='dashboard';
   refreshUIImmediately();
-  syncCloudSoon();
+  syncCloudSoon(2500);
 }
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
@@ -2243,7 +2278,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=11"></script>
+  <script src="./mobile.js?v=12"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
