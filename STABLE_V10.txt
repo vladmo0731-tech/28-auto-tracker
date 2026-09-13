@@ -1,0 +1,31 @@
+28 Auto Tracker — STABLE CHECKPOINT v10
+
+Status: FIXED / WORKING BUILD
+Date: 2026-09-04
+
+This is the current stable cloud/mobile build.
+
+Key points:
+- GitHub Pages + Supabase cloud sync
+- iPhone PWA / Home Screen mode works
+- safe-area / Dynamic Island overlap fixed
+- mobile Dashboard navigation works
+- compact mobile expense rows
+- trash icon deletes expense directly
+- expense amount and delete button no longer overlap
+- service worker/cache bumped through v10
+- startup Dashboard flow retained
+- JWT issued-at-future retry logic retained
+
+IMPORTANT BASELINES:
+- Mac/Desktop v26 remains the frozen desktop baseline and must not be modified.
+- Future cloud/mobile work should branch from this v10 checkpoint.
+
+GitHub Pages:
+https://vladmo0731-tech.github.io/28-auto-tracker/
+
+GitHub repo:
+https://github.com/vladmo0731-tech/28-auto-tracker
+
+Supabase project:
+https://poiyahvywavmcdlhatch.supabase.co
