@@ -1,4 +1,4 @@
-const CACHE='28-auto-tracker-STABLE-v12';
+const CACHE='28-auto-tracker-STABLE-v13';
 const STATIC=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>{

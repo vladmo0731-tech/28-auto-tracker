@@ -1,14 +1,17 @@
-28 Auto Tracker STABLE v12 — instant optimistic UI
+28 Auto Tracker STABLE v13 — stale resync fix
 
-Based on STABLE v11.
+Based on STABLE v12.
 
-Fixes:
-- New expense appears on screen BEFORE waiting for Supabase.
-- If expense save fails, the optimistic row is automatically removed.
-- New car appears immediately before the insert request finishes.
-- If car save fails, the optimistic car is rolled back.
-- Photo signed URLs are now loaded in parallel instead of one-by-one.
-- Background reconciliation is delayed so it cannot interfere with the immediate UI update.
-- Applies to both desktop and mobile.
+Root cause:
+- after a successful add/edit/delete, the UI updated correctly
+- then the app reloaded the entire cloud state a few seconds later
+- that early cloud query could return an older/stale snapshot
+- the stale snapshot replaced local state, so the new item disappeared
+- a later manual refresh showed the item because the cloud state had caught up
 
-Rollback point remains STABLE v10/v11.
+Fix:
+- after successful mutations, keep the confirmed local state
+- do NOT immediately reload the whole cloud dataset
+- Supabase insert/update/delete result is treated as confirmed
+- normal page/app load still reads the latest cloud data
+- applies to both desktop and mobile

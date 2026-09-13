@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=12"/>
+  <link rel="stylesheet" href="./mobile.css?v=13"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -1318,7 +1318,7 @@ function refreshUIImmediately(){
   persist();
   render();
 }
-function syncCloudSoon(delay=500){
+function syncCloudSoon(delay=60000){
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer=setTimeout(async()=>{
     try{
@@ -1718,7 +1718,6 @@ async function confirmSold(){
   c.soldDate=soldDate;
   closeSoldModal();
   refreshUIImmediately();
-  syncCloudSoon(2500);
 }
 async function undoSold(){
   const c=current(); if(!c || c.status!=='Продана')return;
@@ -1739,7 +1738,6 @@ async function undoSold(){
   c.soldDate='';
   c.floorPayoff=0;
   refreshUIImmediately();
-  syncCloudSoon(2500);
 }
 function previewPhoto(event){
   const file=event.target.files[0];
@@ -1828,7 +1826,6 @@ async function saveModalCar(){
 
       closeModal();
       refreshUIImmediately();
-      syncCloudSoon(2500);
 
     }else{
       const purchaseDate=todayISO();
@@ -1898,8 +1895,6 @@ async function saveModalCar(){
           alert('Машина сохранена, но фото не удалось загрузить: '+(photoErr.message||photoErr));
         }
       }
-
-      syncCloudSoon(2500);
     }
 
   }catch(err){
@@ -1961,7 +1956,6 @@ async function addExpense(){
   refreshUIImmediately();
 
   // Reconcile later; do not block the UI.
-  syncCloudSoon(2500);
 }
 async function removeExpense(id){
   if(!confirm('Удалить этот расход?')) return;
@@ -1971,7 +1965,6 @@ async function removeExpense(id){
 
   if(c) c.expenses=(c.expenses||[]).filter(e=>e.id!==id);
   refreshUIImmediately();
-  syncCloudSoon(2500);
 }
 async function deleteCar(){
   const c=current(); if(!c)return;
@@ -1985,7 +1978,6 @@ async function deleteCar(){
   state.selectedId=state.cars[0]?.id||null;
   if(activeView==='detail' && !state.selectedId) activeView='dashboard';
   refreshUIImmediately();
-  syncCloudSoon(2500);
 }
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
@@ -2278,7 +2270,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=12"></script>
+  <script src="./mobile.js?v=13"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
