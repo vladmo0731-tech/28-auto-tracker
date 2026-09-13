@@ -1,0 +1,18 @@
+28 Auto Tracker — v15 approved Excel report
+
+Based strictly on STABLE v14.
+
+Approved report:
+Машина | Дата | VIN | Купил | Расходы | Продал | Прибыль
+
+Excel styling:
+- centered report title
+- light professional header
+- thin grid borders
+- currency formatting
+- positive profit green
+- negative profit red
+- unsold Sale/Profit blank
+- autofilter
+- frozen header
+- one row per car

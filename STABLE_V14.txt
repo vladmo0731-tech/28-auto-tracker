@@ -1,0 +1,29 @@
+28 Auto Tracker — STABLE CHECKPOINT v14
+
+Status: FIXED / WORKING BUILD
+Date: 2026-09-13
+
+This is the current stable cloud/mobile/desktop web build.
+
+Confirmed working:
+- GitHub Pages + Supabase sync
+- mobile PWA safe-area
+- compact mobile expense rows
+- direct trash-delete button
+- amount/delete alignment fixed
+- expense add shows immediately
+- expense list itself refreshes immediately
+- expense totals / cost / profit refresh immediately
+- dedicated expense section renderer
+- applies to both desktop and mobile
+
+Important baselines:
+- Desktop/Mac visual baseline v26 remains separate and should not be changed unless explicitly requested.
+- Future work on the shared cloud app should branch from STABLE v14.
+
+Prior rollback points:
+- STABLE v10
+- STABLE v13
+
+Live site:
+https://vladmo0731-tech.github.io/28-auto-tracker/

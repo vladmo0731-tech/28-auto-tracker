@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=14"/>
+  <link rel="stylesheet" href="./mobile.css?v=15"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -701,6 +701,7 @@
 </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
 <style id="mobileHardFixV5">
 @media(max-width:900px){
@@ -2090,6 +2091,146 @@ document.addEventListener('click',function(e){
   if(!wrap) closeMoreMenu();
 });
 
+
+async function exportCarsExcel(){
+  if(typeof ExcelJS==='undefined'){
+    alert('Excel модуль не загрузился. Проверь интернет и обнови страницу.');
+    return;
+  }
+
+  const cars=state.cars||[];
+  if(!cars.length){
+    alert('Нет машин для отчёта.');
+    return;
+  }
+
+  const wb=new ExcelJS.Workbook();
+  wb.creator='28 Auto Tracker';
+  wb.created=new Date();
+
+  const ws=wb.addWorksheet('Машины',{
+    views:[{state:'frozen',ySplit:3}]
+  });
+
+  // Title
+  ws.mergeCells('A1:G1');
+  const title=ws.getCell('A1');
+  title.value='Отчёт по машинам';
+  title.font={name:'Aptos Display',size:20,bold:true,color:{argb:'FF17365D'}};
+  title.alignment={horizontal:'center',vertical:'middle'};
+  ws.getRow(1).height=34;
+
+  // Header
+  const headers=['Машина','Дата','VIN','Купил','Расходы','Продал','Прибыль'];
+  ws.addRow([]);
+  const headerRow=ws.addRow(headers);
+  headerRow.height=27;
+
+  headerRow.eachCell(cell=>{
+    cell.font={name:'Aptos',size:11,bold:true,color:{argb:'FF17365D'}};
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE8EFF7'}};
+    cell.alignment={horizontal:'center',vertical:'middle'};
+    cell.border={
+      top:{style:'thin',color:{argb:'FFCBD5E1'}},
+      left:{style:'thin',color:{argb:'FFCBD5E1'}},
+      bottom:{style:'thin',color:{argb:'FFCBD5E1'}},
+      right:{style:'thin',color:{argb:'FFCBD5E1'}}
+    };
+  });
+
+  // Data rows
+  cars.forEach(c=>{
+    const t=totals(c);
+    let dateValue='';
+    if(c.purchaseDate){
+      const d=new Date(c.purchaseDate+'T00:00:00');
+      if(!Number.isNaN(d.getTime())) dateValue=d;
+    }
+
+    const sold=!!c.sale;
+    const row=ws.addRow([
+      c.name||'',
+      dateValue,
+      c.vin||'',
+      Number(t.purchase)||0,
+      Number(t.expenses)||0,
+      sold ? Number(t.sale)||0 : '',
+      sold ? Number(t.profit)||0 : ''
+    ]);
+
+    row.height=24;
+
+    row.eachCell({includeEmpty:true},cell=>{
+      cell.font={name:'Aptos',size:10,color:{argb:'FF111827'}};
+      cell.alignment={vertical:'middle'};
+      cell.border={
+        top:{style:'thin',color:{argb:'FFD6DEE8'}},
+        left:{style:'thin',color:{argb:'FFD6DEE8'}},
+        bottom:{style:'thin',color:{argb:'FFD6DEE8'}},
+        right:{style:'thin',color:{argb:'FFD6DEE8'}}
+      };
+    });
+
+    // Date
+    if(dateValue) row.getCell(2).numFmt='mm/dd/yyyy';
+
+    // Money
+    for(let col=4;col<=7;col++){
+      const cell=row.getCell(col);
+      if(typeof cell.value==='number'){
+        cell.numFmt='$#,##0.00;[Red]-$#,##0.00';
+        cell.alignment={horizontal:'right',vertical:'middle'};
+      }
+    }
+
+    // Profit color: green positive, red negative.
+    if(sold){
+      const profitCell=row.getCell(7);
+      const profit=Number(t.profit)||0;
+      profitCell.font={
+        name:'Aptos',
+        size:10,
+        bold:true,
+        color:{argb:profit<0?'FFDC2626':'FF059669'}
+      };
+    }
+  });
+
+  // Sizing like approved preview.
+  ws.columns=[
+    {key:'car',width:30},
+    {key:'date',width:14},
+    {key:'vin',width:22},
+    {key:'buy',width:16},
+    {key:'expenses',width:16},
+    {key:'sale',width:16},
+    {key:'profit',width:16}
+  ];
+
+  ws.autoFilter={
+    from:{row:3,column:1},
+    to:{row:3,column:7}
+  };
+
+  // Keep long VINs visible in the actual Excel file.
+  ws.getColumn(3).alignment={vertical:'middle'};
+
+  const buffer=await wb.xlsx.writeBuffer();
+  const blob=new Blob(
+    [buffer],
+    {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
+  );
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`28-auto-report-${todayISO()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
 function exportCurrentCar(){
   const c=current();
   if(!c) return;
@@ -2308,6 +2449,13 @@ function renderAnalyticsModal(){
 function openReports(){
   openSectionModal('Отчёты',`
     <div class="report-list">
+      <div class="report-row">
+        <div>
+          <strong>Excel по машинам</strong>
+          <div class="small">Машина, дата, VIN, купил, расходы, продал, прибыль</div>
+        </div>
+        <button class="primary" onclick="exportCarsExcel()">Скачать Excel</button>
+      </div>
       <div class="report-row"><div><strong>Полный backup</strong><div class="small">Все машины и расходы</div></div><button class="secondary" onclick="exportData()">Скачать JSON</button></div>
       <div class="report-row"><div><strong>Текущая машина</strong><div class="small">Карточка и расходы выбранной машины</div></div><button class="secondary" onclick="exportCurrentCar()">Скачать JSON</button></div>
     </div>`);
@@ -2324,7 +2472,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=14"></script>
+  <script src="./mobile.js?v=15"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
