@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=15"/>
+  <link rel="stylesheet" href="./mobile.css?v=15.2"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -2092,6 +2092,52 @@ document.addEventListener('click',function(e){
 });
 
 
+
+function csvEscape(value){
+  const s=String(value ?? '');
+  return `"${s.replace(/"/g,'""')}"`;
+}
+
+function exportCarsGoogleSheets(){
+  const cars=state.cars||[];
+  if(!cars.length){
+    alert('Нет машин для отчёта.');
+    return;
+  }
+
+  const lines=[];
+  lines.push([
+    'Машина','Дата','VIN','Купил','Расходы','Продал','Прибыль'
+  ].map(csvEscape).join(','));
+
+  cars.forEach(c=>{
+    const t=totals(c);
+    const sold=(Number(c.sale)||0)>0 || c.status==='Продана';
+
+    lines.push([
+      c.name||'',
+      c.purchaseDate ? formatDate(c.purchaseDate) : '',
+      c.vin||'',
+      (Number(t.purchase)||0).toFixed(2),
+      (Number(t.expenses)||0).toFixed(2),
+      sold ? (Number(t.sale)||0).toFixed(2) : '',
+      sold ? (Number(t.profit)||0).toFixed(2) : ''
+    ].map(csvEscape).join(','));
+  });
+
+  // UTF-8 BOM helps Google Sheets / Excel read Russian correctly.
+  const csv='\uFEFF'+lines.join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`28-auto-report-${todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
 async function exportCarsExcel(){
   if(typeof ExcelJS==='undefined'){
     alert('Excel модуль не загрузился. Проверь интернет и обнови страницу.');
@@ -2175,6 +2221,14 @@ async function exportCarsExcel(){
 
     // Date
     if(dateValue) row.getCell(2).numFmt='mm/dd/yyyy';
+
+    // Force truly blank cells for unsold cars.
+    if(!sold){
+      row.getCell(6).value='';
+      row.getCell(7).value='';
+      row.getCell(6).numFmt='General';
+      row.getCell(7).numFmt='General';
+    }
 
     // Money
     for(let col=4;col<=7;col++){
@@ -2453,10 +2507,13 @@ function openReports(){
     <div class="report-list">
       <div class="report-row">
         <div>
-          <strong>Excel по машинам</strong>
+          <strong>Отчёт по машинам</strong>
           <div class="small">Машина, дата, VIN, купил, расходы, продал, прибыль</div>
         </div>
-        <button class="primary" onclick="exportCarsExcel()">Скачать Excel</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="primary" onclick="exportCarsGoogleSheets()">Google Sheets (.csv)</button>
+          <button class="secondary" onclick="exportCarsExcel()">Excel (.xlsx)</button>
+        </div>
       </div>
       <div class="report-row"><div><strong>Полный backup</strong><div class="small">Все машины и расходы</div></div><button class="secondary" onclick="exportData()">Скачать JSON</button></div>
       <div class="report-row"><div><strong>Текущая машина</strong><div class="small">Карточка и расходы выбранной машины</div></div><button class="secondary" onclick="exportCurrentCar()">Скачать JSON</button></div>
@@ -2474,7 +2531,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=15"></script>
+  <script src="./mobile.js?v=15.2"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));

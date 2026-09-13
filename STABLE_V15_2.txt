@@ -1,0 +1,12 @@
+28 Auto Tracker — v15.2 report export fix
+
+Based on v15.1.
+
+Fixes:
+- Unsold cars: Sale and Profit are explicitly blank in XLSX.
+- Added Google Sheets friendly CSV export.
+- Reports now has:
+  * Google Sheets (.csv)
+  * Excel (.xlsx)
+- CSV is UTF-8 with BOM, so Russian headers open correctly.
+- Unsold cars have completely empty Sale / Profit fields in CSV.
