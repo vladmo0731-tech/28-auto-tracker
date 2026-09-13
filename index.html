@@ -2147,15 +2147,17 @@ async function exportCarsExcel(){
       if(!Number.isNaN(d.getTime())) dateValue=d;
     }
 
-    const sold=!!c.sale;
+    const sold=(Number(c.sale)||0)>0 || c.status==='Продана';
+    const saleValue=sold ? (Number(t.sale)||0) : null;
+    const profitValue=sold ? (Number(t.profit)||0) : null;
     const row=ws.addRow([
       c.name||'',
       dateValue,
       c.vin||'',
       Number(t.purchase)||0,
       Number(t.expenses)||0,
-      sold ? Number(t.sale)||0 : '',
-      sold ? Number(t.profit)||0 : ''
+      saleValue,
+      profitValue
     ]);
 
     row.height=24;
