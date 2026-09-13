@@ -1,17 +1,16 @@
-28 Auto Tracker STABLE v13 — stale resync fix
+28 Auto Tracker STABLE v14 — dedicated expense section rendering
 
-Based on STABLE v12.
+Based on STABLE v13.
 
-Root cause:
-- after a successful add/edit/delete, the UI updated correctly
-- then the app reloaded the entire cloud state a few seconds later
-- that early cloud query could return an older/stale snapshot
-- the stale snapshot replaced local state, so the new item disappeared
-- a later manual refresh showed the item because the cloud state had caught up
+Observed behavior:
+- sidebar totals updated after adding an expense
+- expense list itself did not refresh until page reload
 
 Fix:
-- after successful mutations, keep the confirmed local state
-- do NOT immediately reload the whole cloud dataset
-- Supabase insert/update/delete result is treated as confirmed
-- normal page/app load still reads the latest cloud data
-- applies to both desktop and mobile
+- added renderCurrentExpenseSection()
+- expense rows are rebuilt independently from the full page render
+- expense KPIs and summary totals are updated independently
+- add/delete expense explicitly call this renderer
+- full render is wrapped so an unrelated rendering error cannot prevent the
+  expense list from refreshing
+- applies to desktop and mobile

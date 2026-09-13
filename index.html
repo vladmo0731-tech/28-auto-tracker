@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=13"/>
+  <link rel="stylesheet" href="./mobile.css?v=14"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -1316,7 +1316,14 @@ async function loadCloudData(){
 let cloudSyncTimer=null;
 function refreshUIImmediately(){
   persist();
-  render();
+  renderCurrentExpenseSection();
+  try{
+    render();
+  }catch(err){
+    console.error('Full render failed; expense section was still updated',err);
+  }
+  // Render it once more in case the full render replaced any of its nodes.
+  renderCurrentExpenseSection();
 }
 function syncCloudSoon(delay=60000){
   clearTimeout(cloudSyncTimer);
@@ -1508,6 +1515,52 @@ function renderAllExpenses(){
       <div class="all-expense-car">${e.category||'Other'}</div>
       <div class="all-expense-amount">${money(e.amount)}</div>`;
     el.appendChild(row);
+  });
+}
+
+
+function renderCurrentExpenseSection(){
+  const c=current();
+  if(!c) return;
+
+  const t=totals(c);
+
+  // Update the expense/cost KPIs immediately.
+  const sExpenses=document.getElementById('sExpenses');
+  const sCost=document.getElementById('sCost');
+  const sProfit=document.getElementById('sProfit');
+  if(sExpenses) sExpenses.textContent=money(t.expenses);
+  if(sCost) sCost.textContent=money(t.cost);
+  if(sProfit){
+    sProfit.textContent=money(t.profit);
+    sProfit.className='stat-value profit '+(t.profit<0?'neg':'pos');
+  }
+
+  // Update the summary block immediately.
+  const rExpenses=document.getElementById('rExpenses');
+  const rCost=document.getElementById('rCost');
+  const rProfit=document.getElementById('rProfit');
+  if(rExpenses) rExpenses.textContent=money(t.expenses);
+  if(rCost) rCost.textContent=money(t.cost);
+  if(rProfit){
+    rProfit.textContent=money(t.profit);
+    rProfit.style.color=t.profit<0?'#b91c1c':'#15803d';
+  }
+
+  // Rebuild ONLY the expense rows.
+  const tb=document.getElementById('expenseTable');
+  if(!tb) return;
+
+  tb.innerHTML='';
+  (c.expenses||[]).forEach(e=>{
+    const tr=document.createElement('tr');
+    tr.dataset.expenseId=e.id||'';
+    tr.innerHTML=`<td class="expense-date">${formatDate(e.date)||'—'}</td>
+      <td class="expense-cat">${e.category||''}</td>
+      <td class="expense-desc">${e.description || 'Расход'}</td>
+      <td class="money">${money(e.amount)}</td>
+      <td class="expense-menu"><button class="secondary" aria-label="Удалить расход" title="Удалить расход" onclick="removeExpense('${e.id}')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button></td>`;
+    tb.appendChild(tr);
   });
 }
 
@@ -1927,6 +1980,7 @@ async function addExpense(){
   c.expenses.push(optimisticExpense);
   document.getElementById('eDescription').value='';
   document.getElementById('eAmount').value='';
+  renderCurrentExpenseSection();
   refreshUIImmediately();
 
   const {data,error}=await sb.from('expenses').insert({
@@ -1953,9 +2007,8 @@ async function addExpense(){
     saved.description=data?.description || description;
     saved.amount=Number(data?.amount ?? amount);
   }
+  renderCurrentExpenseSection();
   refreshUIImmediately();
-
-  // Reconcile later; do not block the UI.
 }
 async function removeExpense(id){
   if(!confirm('Удалить этот расход?')) return;
@@ -1964,6 +2017,7 @@ async function removeExpense(id){
   if(error){alert('Ошибка удаления расхода: '+error.message);return}
 
   if(c) c.expenses=(c.expenses||[]).filter(e=>e.id!==id);
+  renderCurrentExpenseSection();
   refreshUIImmediately();
 }
 async function deleteCar(){
@@ -2270,7 +2324,7 @@ function openSettings(){
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=13"></script>
+  <script src="./mobile.js?v=14"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
