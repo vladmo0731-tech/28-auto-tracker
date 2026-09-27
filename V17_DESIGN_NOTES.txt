@@ -1,0 +1,18 @@
+28 Auto Tracker v17 — Premium Redesign
+
+Base: STABLE v16.1
+Scope: visual redesign only; application logic/data model preserved.
+
+Applied:
+- premium dark automotive theme from approved mockup
+- redesigned sidebar branding and inventory styling
+- refined sold-inventory visual section
+- compact two-column vehicle hero/info layout
+- premium KPI cards
+- factual summary section; no added charts or forecasts
+- denser expense-entry and expense-table styling
+- restyled dashboard, car grid, expense list, modals
+- mobile responsive adaptation matching the same visual language
+- existing v16.1 functionality retained
+
+No expense-dynamics chart or profit-forecast chart was added.

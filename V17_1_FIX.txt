@@ -1,0 +1,9 @@
+v17.1 candidate
+Critical packaging repair before QA:
+- linked design-v17.css in index.html
+- applied premium logo markup expected by the stylesheet
+- added detail breadcrumb styling hook
+- cache-busted mobile.js
+- added design-v17.css to service-worker static assets
+
+No business logic changed.

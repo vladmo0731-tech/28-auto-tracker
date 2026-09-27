@@ -1,0 +1,43 @@
+28 Auto Tracker — v17.1 QA PASSED
+
+QA scope:
+- desktop browser flow
+- mobile browser flow
+- responsive layout / horizontal overflow
+- auth/session initialization with mocked Supabase session
+- cloud data load with mocked Supabase backend
+- dashboard totals
+- repair-only "Вложено"
+- car detail navigation
+- expense newest-first ordering
+- add expense immediate rendering
+- delete expense immediate rendering
+- add car
+- edit car
+- sell car
+- automatic move to Sold Inventory
+- sold counter increment
+- undo sale
+- Reports / Analytics / Settings modal smoke tests
+- mobile bottom navigation
+- mobile cars view
+- mobile expense view
+- JavaScript syntax
+- manifest JSON
+- service-worker no-cache behavior for Supabase / cross-origin API calls
+- redesign stylesheet loading
+
+Result:
+24 / 24 automated browser interaction checks passed.
+No JavaScript runtime errors were observed in the mocked browser test.
+
+Critical issue found during QA and fixed:
+The v17 package contained design-v17.css, but index.html did not actually load it.
+v17.1 links the stylesheet correctly, applies the premium logo/breadcrumb hooks,
+cache-busts mobile.js, and includes design-v17.css in service-worker static assets.
+
+Important limitation:
+The QA environment cannot authenticate against the real production Supabase account.
+Cloud operations were tested with an in-browser mock matching the app's Supabase
+request/response shapes. Real production cloud sync should still receive one final
+smoke test after deployment to GitHub Pages.
