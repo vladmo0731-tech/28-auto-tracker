@@ -1,23 +1,17 @@
-28 Auto Tracker — STABLE CHECKPOINT v16.1
+28 Auto Tracker — v16.1
 
-Status: FIXED / WORKING BUILD
+Based on v16.
 
-Current stable shared cloud app build for desktop + mobile.
+Added desktop sidebar sold inventory section:
+- Main Inventory list contains only cars not sold.
+- Collapsible "Проданное Inventory" section contains all sold cars.
+- Sold count is displayed.
+- Clicking ПРОДАНО automatically moves the car into sold inventory and opens the section.
+- Undo sale automatically moves the car back to main Inventory.
+- Sold cars are ordered by sold date, newest first.
+- If a sold car is selected, sold inventory opens automatically.
 
-Confirmed working:
-- cross-device sync refresh behavior
-- Supabase/API responses are not cached by service worker
-- newest expenses appear first
-- dashboard "ВЛОЖЕНО" counts repair expenses only
-- desktop sidebar main Inventory shows only unsold cars
-- collapsible "Проданное Inventory" section
-- sold cars automatically move to sold inventory after ПРОДАНО
-- Undo sale moves car back to main Inventory
-- sold inventory count
-- sold cars sorted newest sold first
-- prior expense rendering fixes retained
-- Google Sheets / Excel report export retained
-
-Important:
-- Future shared-app changes should branch from STABLE v16.1.
-- Desktop/Mac visual baseline v26 remains a separate frozen reference.
+All v16 fixes are retained:
+- cross-device first-open sync
+- newest expenses first
+- dashboard ВЛОЖЕНО = repair expenses only
