@@ -1,0 +1,17 @@
+28 Auto Tracker — v16.1
+
+Based on v16.
+
+Added desktop sidebar sold inventory section:
+- Main Inventory list contains only cars not sold.
+- Collapsible "Проданное Inventory" section contains all sold cars.
+- Sold count is displayed.
+- Clicking ПРОДАНО automatically moves the car into sold inventory and opens the section.
+- Undo sale automatically moves the car back to main Inventory.
+- Sold cars are ordered by sold date, newest first.
+- If a sold car is selected, sold inventory opens automatically.
+
+All v16 fixes are retained:
+- cross-device first-open sync
+- newest expenses first
+- dashboard ВЛОЖЕНО = repair expenses only

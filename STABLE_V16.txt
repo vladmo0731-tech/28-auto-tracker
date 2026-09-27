@@ -1,0 +1,24 @@
+28 Auto Tracker — v16
+
+Based on v15.2.
+
+Fixes:
+1. Cross-device sync on first app open
+   - Service worker no longer caches Supabase/API responses.
+   - Supabase fetches use cache: no-store.
+   - App refreshes cloud data on pageshow, focus, and visibility resume.
+
+2. Expense sorting
+   - Newest expense is shown first.
+   - Uses expenses.created_at for correct ordering, including multiple expenses on the same date.
+   - Applied to current-car expenses, all-expenses view, and recent activity.
+
+3. Dashboard "Вложено"
+   - Now sums ONLY repair expense categories:
+     Parts, Body, Paint, Mechanical.
+   - Purchase price, Delivery, Auction fee, DMV, Other are excluded.
+
+Important:
+After deploying v16, the old service worker may control one last launch.
+Open/reload once with ?v=16 or remove/re-add the iPhone Home Screen app if needed.
+After v16 activates, Supabase data will no longer be served from stale service-worker cache.

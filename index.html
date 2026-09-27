@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=15.2"/>
+  <link rel="stylesheet" href="./mobile.css?v=16.1"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -115,6 +115,70 @@
       scrollbar-width:thin;
       scrollbar-color:#2b3a46 transparent;
     }
+    .inventory-section-label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin:2px 2px 6px;
+      color:#8f9ca7;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .sold-inventory-wrap{
+      border-top:1px solid #22313d;
+      margin-top:4px;
+      padding-top:8px;
+      flex:0 0 auto;
+    }
+    .sold-inventory-toggle{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:9px 10px;
+      margin:0 0 7px;
+      border:1px solid #2a3a47;
+      border-radius:9px;
+      background:#101a23;
+      color:#c8d2da;
+      font-weight:800;
+      cursor:pointer;
+      text-align:left;
+    }
+    .sold-inventory-toggle:hover{background:#14212b;border-color:#3b4f5f}
+    .sold-inventory-toggle .left{
+      display:flex;align-items:center;gap:8px;min-width:0
+    }
+    .sold-inventory-toggle .chevron{
+      width:16px;height:16px;flex:0 0 auto;
+      transition:transform .16s ease;
+      stroke:#9eabb6;
+    }
+    .sold-inventory-toggle.open .chevron{transform:rotate(90deg)}
+    .sold-count{
+      min-width:24px;height:22px;padding:0 7px;
+      display:inline-flex;align-items:center;justify-content:center;
+      border-radius:999px;
+      background:#18262f;
+      border:1px solid #314451;
+      color:#9fb0bd;
+      font-size:11px;
+      font-weight:800;
+    }
+    .sold-car-list{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      max-height:36vh;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .sold-car-list.hidden{display:none}
+
     .car-item{
       display:grid;
       grid-template-columns:82px 1fr;
@@ -902,7 +966,24 @@
     </div>
 
     <button class="primary" onclick="openAddCar()">+ Добавить машину</button>
+
+    <div class="inventory-section-label">
+      <span>Inventory</span>
+      <span id="activeInventoryCount"></span>
+    </div>
     <div class="car-list" id="carList"></div>
+
+    <div class="sold-inventory-wrap">
+      <button id="soldInventoryToggle" class="sold-inventory-toggle" onclick="toggleSoldInventory()">
+        <span class="left">
+          <svg class="chevron" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7"/></svg>
+          <span>Проданное Inventory</span>
+        </span>
+        <span id="soldInventoryCount" class="sold-count">0</span>
+      </button>
+      <div class="sold-car-list hidden" id="soldCarList"></div>
+    </div>
+
     <div class="sidebar-bottom-dock">
       <button id="sidebarHomeBtn" class="sidebar-home-btn" onclick="showDashboard()" title="Главная">
         <svg viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v10h13V10M9 20v-6h6v6"/></svg>
@@ -1179,7 +1260,11 @@
 <script>
 const SUPABASE_URL = "https://poiyahvywavmcdlhatch.supabase.co";
 const SUPABASE_KEY = "sb_publishable_poWdCg_EZU0mgGqwPevNxg_hnBVkD4c";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY,{
+  global:{
+    fetch:(input,init={})=>fetch(input,{...init,cache:'no-store'})
+  }
+});
 
 let editingId = null;
 let pendingPhoto = '';
@@ -1267,7 +1352,7 @@ async function loadCloudData(){
       'машины'
     ),
     supabaseWithRetry(
-      ()=>sb.from('expenses').select('*').order('created_at',{ascending:true}),
+      ()=>sb.from('expenses').select('*').order('created_at',{ascending:false}),
       'расходы'
     )
   ]);
@@ -1280,6 +1365,7 @@ async function loadCloudData(){
     (expensesByCar[e.car_id] ||= []).push({
       id:e.id,
       date:e.expense_date,
+      createdAt:e.created_at||'',
       category:e.category||'Other',
       description:e.description||'',
       amount:Number(e.amount)||0
@@ -1359,6 +1445,23 @@ function persist(){
     return true;
   }catch(e){return false}
 }
+
+function expenseSortValue(e){
+  return String(e?.createdAt || e?.created_at || e?.date || '');
+}
+function sortExpensesNewestFirst(list){
+  return [...(list||[])].sort((a,b)=>expenseSortValue(b).localeCompare(expenseSortValue(a)));
+}
+function isRepairExpense(e){
+  const cat=String(e?.category||'').trim().toLowerCase();
+  return ['parts','body','paint','mechanical'].includes(cat);
+}
+function repairExpensesTotal(c){
+  return (c?.expenses||[])
+    .filter(isRepairExpense)
+    .reduce((sum,e)=>sum+(Number(e.amount)||0),0);
+}
+
 function totals(c){
   const expenses=(c.expenses||[]).reduce((s,e)=>s+(Number(e.amount)||0),0);
   const purchase=Number(c.purchase)||0;
@@ -1421,7 +1524,7 @@ function openCarDetail(id){
 function renderDashboard(){
   const available=state.cars.filter(c=>c.status!=='Продана');
   const totalsAll=state.cars.map(c=>({c,t:totals(c)}));
-  const invested=totalsAll.reduce((s,x)=>s+x.t.cost,0);
+  const invested=state.cars.reduce((s,c)=>s+repairExpensesTotal(c),0);
   const sales=totalsAll.reduce((s,x)=>s+x.t.sale,0);
   const profit=totalsAll.reduce((s,x)=>s+x.t.profit,0);
 
@@ -1452,16 +1555,16 @@ function renderDashboard(){
   const activities=[];
   state.cars.forEach(c=>{
     (c.expenses||[]).forEach(e=>activities.push({
-      date:e.date||'',type:'expense',title:e.description||e.category||'Расход',
+      date:e.date||'',createdAt:e.createdAt||e.date||'',type:'expense',title:e.description||e.category||'Расход',
       meta:c.name,amount:Number(e.amount)||0
     }));
     if(c.sale){
       activities.push({
-        date:c.soldDate||'',type:'sale',title:'Продана машина',meta:c.name,amount:Number(c.sale)||0
+        date:c.soldDate||'',createdAt:c.soldDate||'',type:'sale',title:'Продана машина',meta:c.name,amount:Number(c.sale)||0
       });
     }
   });
-  activities.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  activities.sort((a,b)=>String(b.createdAt||b.date).localeCompare(String(a.createdAt||a.date)));
 
   const act=document.getElementById('dashActivityList');
   if(act){
@@ -1505,7 +1608,7 @@ function renderAllExpenses(){
   const el=document.getElementById('allExpensesList'); if(!el)return;
   const rows=[];
   state.cars.forEach(c=>(c.expenses||[]).forEach(e=>rows.push({...e,carName:c.name,carId:c.id})));
-  rows.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  rows.sort((a,b)=>expenseSortValue(b).localeCompare(expenseSortValue(a)));
   el.innerHTML='';
   if(!rows.length){el.innerHTML='<div class="empty-dash">Расходов пока нет.</div>';return}
   rows.forEach(e=>{
@@ -1553,7 +1656,7 @@ function renderCurrentExpenseSection(){
   if(!tb) return;
 
   tb.innerHTML='';
-  (c.expenses||[]).forEach(e=>{
+  sortExpensesNewestFirst(c.expenses).forEach(e=>{
     const tr=document.createElement('tr');
     tr.dataset.expenseId=e.id||'';
     tr.innerHTML=`<td class="expense-date">${formatDate(e.date)||'—'}</td>
@@ -1565,26 +1668,62 @@ function renderCurrentExpenseSection(){
   });
 }
 
-function render(){
-  const list=document.getElementById('carList'); list.innerHTML='';
-  state.cars.forEach(c=>{
-    const t=totals(c), div=document.createElement('div');
-    div.className='car-item'+(c.id===state.selectedId?' active':'');
-    const isActive = c.id===state.selectedId;
-    const statusClass=c.status==='Продана'?'status-sold':(c.status==='Выставлена'?'status-sale':(c.status==='В ремонте'?'status-sale':'status-transit'));
-    const saleLine = `Продажа: <span style="color:${c.sale? '#39d353' : '#9fb0bd'};font-weight:700">${c.sale ? money(t.sale) : '—'}</span>`;
-    const expandedLine=c.status==='Продана'
-      ? `Прибыль: <span class="profit-mini">${money(t.profit)}</span>`
-      : (t.expenses ? `Расходы: <span style="color:#ff6a55;font-weight:700">${money(t.expenses)}</span>` : `Расходы: —`);
 
-    if(isActive){
-      div.innerHTML=`<img class="thumb" src="${c.photo||placeholderPhoto()}"><div><div class="car-name">${c.name||'Без названия'}</div><div class="car-sub status-line"><span class="status-dot ${statusClass}"></span>${c.status||''}</div><div class="car-sub">${expandedLine}</div><div class="car-date">Дата покупки: ${formatDate(c.purchaseDate)}</div></div>`;
-    }else{
-      div.innerHTML=`<img class="thumb" src="${c.photo||placeholderPhoto()}"><div><div class="car-name">${c.name||'Без названия'}</div><div class="car-date">Дата: ${formatDate(c.purchaseDate)}</div><div class="car-sub">${saleLine}</div></div>`;
-    }
-    div.onclick=()=>openCarDetail(c.id);
-    list.appendChild(div);
-  });
+let soldInventoryOpen=false;
+
+function toggleSoldInventory(force){
+  soldInventoryOpen = typeof force==='boolean' ? force : !soldInventoryOpen;
+  const list=document.getElementById('soldCarList');
+  const btn=document.getElementById('soldInventoryToggle');
+  if(list) list.classList.toggle('hidden',!soldInventoryOpen);
+  if(btn) btn.classList.toggle('open',soldInventoryOpen);
+}
+
+function buildSidebarCarItem(c){
+  const t=totals(c), div=document.createElement('div');
+  div.className='car-item'+(c.id===state.selectedId?' active':'');
+  const isActive=c.id===state.selectedId;
+  const statusClass=c.status==='Продана'?'status-sold':(c.status==='Выставлена'?'status-sale':(c.status==='В ремонте'?'status-sale':'status-transit'));
+  const saleLine=`Продажа: <span style="color:${c.sale?'#39d353':'#9fb0bd'};font-weight:700">${c.sale?money(t.sale):'—'}</span>`;
+  const expandedLine=c.status==='Продана'
+    ? `Прибыль: <span class="profit-mini">${money(t.profit)}</span>`
+    : (t.expenses?`Расходы: <span style="color:#ff6a55;font-weight:700">${money(t.expenses)}</span>`:`Расходы: —`);
+
+  if(isActive){
+    div.innerHTML=`<img class="thumb" src="${c.photo||placeholderPhoto()}"><div><div class="car-name">${c.name||'Без названия'}</div><div class="car-sub status-line"><span class="status-dot ${statusClass}"></span>${c.status||''}</div><div class="car-sub">${expandedLine}</div><div class="car-date">Дата покупки: ${formatDate(c.purchaseDate)}</div></div>`;
+  }else{
+    div.innerHTML=`<img class="thumb" src="${c.photo||placeholderPhoto()}"><div><div class="car-name">${c.name||'Без названия'}</div><div class="car-date">Дата: ${formatDate(c.purchaseDate)}</div><div class="car-sub">${saleLine}</div></div>`;
+  }
+
+  div.onclick=()=>openCarDetail(c.id);
+  return div;
+}
+
+function render(){
+  const list=document.getElementById('carList');
+  const soldList=document.getElementById('soldCarList');
+  if(list) list.innerHTML='';
+  if(soldList) soldList.innerHTML='';
+
+  const activeCars=state.cars.filter(c=>c.status!=='Продана');
+  const soldCars=state.cars
+    .filter(c=>c.status==='Продана')
+    .sort((a,b)=>String(b.soldDate||'').localeCompare(String(a.soldDate||'')));
+
+  activeCars.forEach(c=>list?.appendChild(buildSidebarCarItem(c)));
+  soldCars.forEach(c=>soldList?.appendChild(buildSidebarCarItem(c)));
+
+  const activeCount=document.getElementById('activeInventoryCount');
+  if(activeCount) activeCount.textContent=activeCars.length ? String(activeCars.length) : '';
+  const soldCount=document.getElementById('soldInventoryCount');
+  if(soldCount) soldCount.textContent=String(soldCars.length);
+
+  // If the currently selected car is sold, keep its section open.
+  if(current()?.status==='Продана' && !soldInventoryOpen){
+    toggleSoldInventory(true);
+  }else{
+    toggleSoldInventory(soldInventoryOpen);
+  }
 
   const c=current();
   document.getElementById('emptyState').classList.toggle('hidden',!!c);
@@ -1607,7 +1746,7 @@ function render(){
   const sp=document.getElementById('sProfit'); sp.textContent=money(t.profit); sp.className='stat-value profit '+(t.profit<0?'neg':'pos');
 
   const tb=document.getElementById('expenseTable'); tb.innerHTML='';
-  (c.expenses||[]).forEach(e=>{
+  sortExpensesNewestFirst(c.expenses).forEach(e=>{
     const tr=document.createElement('tr');
     const cat=String(e.category||'').toLowerCase();
     const catClass=cat.includes('auction')?'cat-fee':cat.includes('delivery')?'cat-transport':cat.includes('paint')?'cat-detail':cat.includes('dmv')?'cat-reg':'cat-repair';
@@ -1770,6 +1909,7 @@ async function confirmSold(){
   c.sale=sale;
   c.status='Продана';
   c.soldDate=soldDate;
+  soldInventoryOpen=true;
   closeSoldModal();
   refreshUIImmediately();
 }
@@ -1971,6 +2111,7 @@ async function addExpense(){
   const optimisticExpense={
     id:tempId,
     date:expenseDate,
+    createdAt:new Date().toISOString(),
     category,
     description,
     amount
@@ -2004,6 +2145,7 @@ async function addExpense(){
   if(saved){
     saved.id=data?.id || tempId;
     saved.date=data?.expense_date || expenseDate;
+    saved.createdAt=data?.created_at || saved.createdAt || new Date().toISOString();
     saved.category=data?.category || category;
     saved.description=data?.description || description;
     saved.amount=Number(data?.amount ?? amount);
@@ -2529,9 +2671,35 @@ function openSettings(){
     </div>`);
 }
 
+
+let lastForegroundSync=0;
+async function refreshFromCloudOnForeground(){
+  if(!sessionUser) return;
+  const now=Date.now();
+  if(now-lastForegroundSync<800) return;
+  lastForegroundSync=now;
+  try{
+    await loadCloudData();
+  }catch(err){
+    console.warn('Foreground sync failed',err);
+  }
+}
+
+window.addEventListener('pageshow',()=>{
+  setTimeout(refreshFromCloudOnForeground,150);
+});
+window.addEventListener('focus',()=>{
+  setTimeout(refreshFromCloudOnForeground,150);
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    setTimeout(refreshFromCloudOnForeground,150);
+  }
+});
+
 initAuth();
 </script>
-  <script src="./mobile.js?v=15.2"></script>
+  <script src="./mobile.js?v=16.1"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
