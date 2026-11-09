@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=16.2"/>
+  <link rel="stylesheet" href="./mobile.css?v=16.2.1"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -1568,6 +1568,9 @@ function openProfitPeriod(){
     </div>
     <p id="profitRangeError" role="alert" style="color:#ff6262"></p>
     <div class="modal-actions"><button onclick="applyProfitRange()">Показать прибыль</button></div>`);
+  const profitModal=document.getElementById('sectionModal');
+  profitModal.classList.add('profit-period-modal');
+  profitModal.querySelector('.modal-card').scrollTop=0;
   document.getElementById('profitPreset').value=profitRange.from||profitRange.to?'custom':'all';
   ['profitFrom','profitTo'].forEach(id=>document.getElementById(id).onchange=()=>document.getElementById('profitPreset').value='custom');
 }
@@ -2521,11 +2524,13 @@ function exportCurrentCar(){
 }
 
 function openSectionModal(title,bodyHtml){
+  document.getElementById('sectionModal').classList.remove('profit-period-modal');
   document.getElementById('sectionModalTitle').textContent=title;
   document.getElementById('sectionModalBody').innerHTML=bodyHtml;
   document.getElementById('sectionModal').classList.remove('hidden');
 }
 function closeSectionModal(){
+  document.getElementById('sectionModal').classList.remove('profit-period-modal');
   document.getElementById('sectionModal').classList.add('hidden');
 }
 
@@ -2772,7 +2777,7 @@ document.addEventListener('visibilitychange',()=>{
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=16.2"></script>
+  <script src="./mobile.js?v=16.2.1"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));

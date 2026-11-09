@@ -1,0 +1,1 @@
+Based on user-confirmed stable v16.2. Mobile profit period dialog only: top aligned, safe-area padding, dynamic viewport height, internal scrolling, above mobile nav. Versioned asset references updated. v16.2 and v16.1 preserved. Requires user verification on physical phone.

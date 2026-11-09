@@ -167,3 +167,30 @@
     grid-template-columns:1fr 104px !important;
   }
 }
+
+/* v16.2.1: keep the profit period picker visible above mobile navigation. */
+@media(max-width:900px){
+  #sectionModal.profit-period-modal{
+    z-index:300;
+    align-items:flex-start!important;
+    box-sizing:border-box;
+    height:100vh;
+    height:100dvh;
+    padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))!important;
+  }
+  #sectionModal.profit-period-modal .modal-card{
+    box-sizing:border-box;
+    margin:0!important;
+    min-height:0;
+    max-height:100%!important;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    border-radius:16px!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  #sectionModal.profit-period-modal .section-modal-head{align-items:flex-start}
+  #sectionModal.profit-period-modal .section-modal-head h2{font-size:21px}
+  #sectionModal.profit-period-modal .section-modal-head button{flex-shrink:0}
+  #sectionModal.profit-period-modal input,
+  #sectionModal.profit-period-modal select{font-size:16px;min-width:0;box-sizing:border-box;max-width:100%}
+}
