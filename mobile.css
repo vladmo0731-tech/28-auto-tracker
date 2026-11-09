@@ -168,29 +168,38 @@
   }
 }
 
-/* v16.2.1: keep the profit period picker visible above mobile navigation. */
+/* v16.2.3: all dialogs share the same mobile viewport rules. */
 @media(max-width:900px){
-  #sectionModal.profit-period-modal{
-    z-index:300;
-    align-items:flex-start!important;
-    box-sizing:border-box;
-    height:100vh;
-    height:100dvh;
+  body .modal,body .auth-overlay{
+    top:var(--dialog-top,0px)!important;bottom:auto!important;
+    height:100vh;height:var(--dialog-height,100dvh)!important;
+    box-sizing:border-box;align-items:flex-start!important;
     padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))!important;
+    overflow:hidden;
   }
-  #sectionModal.profit-period-modal .modal-card{
-    box-sizing:border-box;
-    margin:0!important;
-    min-height:0;
-    max-height:100%!important;
-    overflow-y:auto;
-    overscroll-behavior:contain;
-    border-radius:16px!important;
-    -webkit-overflow-scrolling:touch;
+  body .modal{z-index:300!important}
+  body .modal .modal-card,body .auth-overlay .auth-card{
+    box-sizing:border-box;margin:0!important;min-height:0;max-height:100%!important;
+    max-width:100%!important;overflow-y:auto;overscroll-behavior:contain;
+    border-radius:16px!important;-webkit-overflow-scrolling:touch;
   }
-  #sectionModal.profit-period-modal .section-modal-head{align-items:flex-start}
-  #sectionModal.profit-period-modal .section-modal-head h2{font-size:21px}
-  #sectionModal.profit-period-modal .section-modal-head button{flex-shrink:0}
-  #sectionModal.profit-period-modal input,
-  #sectionModal.profit-period-modal select{font-size:16px;min-width:0;box-sizing:border-box;max-width:100%}
+  body .modal .modal-grid{grid-template-columns:minmax(0,1fr)!important}
+  body .modal .modal-grid .full{grid-column:auto!important}
+  body .modal input,body .modal select,body .modal textarea,body .auth-overlay input{
+    font-size:16px;min-width:0;box-sizing:border-box;max-width:100%;
+  }
+  body .modal .modal-grid>*,body .modal .setting-row{min-width:0}
+  body .modal .setting-row{flex-wrap:wrap;gap:10px}
+  body .modal .modal-actions{flex-wrap:wrap}
+  body .modal .modal-actions button{min-height:44px}
+  body .modal .section-modal-head{align-items:flex-start}
+  body .modal .section-modal-head h2{font-size:21px;min-width:0}
+  body .modal .section-modal-head button{flex-shrink:0;min-height:44px}
+  body #mobileNav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:54px;font-size:11px;line-height:1.2;padding:6px 1px}
+  body #mobileNav .nav-icon{display:block;width:26px;height:26px;flex-shrink:0}
+  body #mobileNav{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+  body main{padding-bottom:calc(94px + env(safe-area-inset-bottom))!important}
+  body.mobile-dialog-open{overflow-y:hidden!important}
+  body.mobile-dialog-open #mobileNav{visibility:hidden;pointer-events:none}
 }
+@media(min-width:901px){#mobileNav{display:none!important}}
