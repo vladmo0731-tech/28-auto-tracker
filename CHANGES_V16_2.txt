@@ -1,0 +1,6 @@
+v16.2 — candidate based on frozen STABLE v16.1
+Back navigation between app views; Back closes section dialogs.
+Dashboard profit: clickable date filter, inclusive sale dates, sold cars only.
+Presets: all time, today, 7/30 days, month, year, custom range.
+Upload all app files to the existing hosting location. Original v16.1 preserved.
+Cloud integration requires verification in the signed-in deployed app.

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
   <link rel="manifest" href="./manifest.webmanifest"/>
-  <link rel="stylesheet" href="./mobile.css?v=16.1"/>
+  <link rel="stylesheet" href="./mobile.css?v=16.2"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -1008,6 +1008,7 @@
   </aside>
 
   <main>
+    <button id="appBack" class="secondary" onclick="goAppBack()" style="margin-bottom:14px" hidden>← Назад</button>
     <section id="dashboardView" class="dashboard-view">
       <div class="dashboard-header">
         <div>
@@ -1021,7 +1022,7 @@
         <div class="dash-card"><div class="dash-label">В наличии</div><div id="dashInventory" class="dash-value">0</div></div>
         <div class="dash-card"><div class="dash-label">Вложено</div><div id="dashInvested" class="dash-value orange">$0</div></div>
         <div class="dash-card"><div class="dash-label">Продажи</div><div id="dashSales" class="dash-value">$0</div></div>
-        <div class="dash-card"><div class="dash-label">Прибыль</div><div id="dashProfit" class="dash-value green">$0</div></div>
+        <button type="button" class="dash-card" onclick="openProfitPeriod()" style="text-align:left;color:inherit;font:inherit;cursor:pointer"><div class="dash-label">Прибыль ↗</div><div id="dashProfit" class="dash-value green">$0</div><div id="profitPeriodLabel" class="small">Все время · выбрать период</div></button>
       </div>
 
       <div class="dash-grid">
@@ -1251,7 +1252,7 @@
   <div class="modal-card section-modal-card">
     <div class="section-modal-head">
       <h2 id="sectionModalTitle">Раздел</h2>
-      <button class="secondary" onclick="closeSectionModal()">✕</button>
+      <button class="secondary" onclick="closeSectionModal()">← Назад</button>
     </div>
     <div id="sectionModalBody"></div>
   </div>
@@ -1271,6 +1272,10 @@ let pendingPhoto = '';
 let pendingPhotoBlob = null;
 let sessionUser = null;
 let state = {cars:[], selectedId: localStorage.getItem('28SelectedCar') || null};
+const viewTrail=[];
+let lastViewState={view:'dashboard',id:null};
+let navigatingBack=false;
+let profitRange={from:'',to:'',label:'Все время'};
 let activeView='dashboard'; // always start on Dashboard
 
 async function signIn(){
@@ -1477,11 +1482,17 @@ function placeholderPhoto(){
 }
 
 function setActiveView(view){
+  if(!navigatingBack && (view!==lastViewState.view || (view==='detail' && state.selectedId!==lastViewState.id))){
+    viewTrail.push({...lastViewState});
+  }
+  lastViewState={view,id:state.selectedId};
   activeView=view;
   applyActiveView();
   if(window.syncMobileNav) window.syncMobileNav();
 }
 function applyActiveView(){
+  const back=document.getElementById('appBack');
+  if(back) back.hidden=activeView==='dashboard' && !viewTrail.length;
   const dashboard=document.getElementById('dashboardView');
   const carsView=document.getElementById('carsView');
   const expensesView=document.getElementById('allExpensesView');
@@ -1521,18 +1532,80 @@ function openCarDetail(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+
+function goAppBack(){
+  const previous=viewTrail.pop() || {view:'dashboard',id:null};
+  navigatingBack=true;
+  if(previous.id && state.cars.some(c=>c.id===previous.id)) state.selectedId=previous.id;
+  if(previous.view==='detail' && !current()) previous.view='dashboard';
+  setActiveView(previous.view);
+  navigatingBack=false;
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function profitCars(){
+  return state.cars.filter(c=>c.status==='Продана' &&
+    ((!profitRange.from && !profitRange.to) ||
+     (c.soldDate && (!profitRange.from || c.soldDate.slice(0,10)>=profitRange.from) &&
+     (!profitRange.to || c.soldDate.slice(0,10)<=profitRange.to))));
+}
+function localDateISO(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function openProfitPeriod(){
+  openSectionModal('Прибыль за период', `
+    <p class="small">Чистая прибыль по проданным машинам: цена продажи минус себестоимость. Период считается по дате продажи.</p>
+    <label for="profitPreset">Период</label>
+    <select id="profitPreset" onchange="chooseProfitPreset(this.value)">
+      <option value="all">Все время</option><option value="today">Сегодня</option>
+      <option value="7">Последние 7 дней</option><option value="30">Последние 30 дней</option>
+      <option value="month">Этот месяц</option><option value="year">Этот год</option>
+      <option value="custom">Свой период</option>
+    </select>
+    <div class="modal-grid" style="margin-top:16px">
+      <div><label for="profitFrom">С</label><input type="date" id="profitFrom" value="${profitRange.from}"></div>
+      <div><label for="profitTo">По (включительно)</label><input type="date" id="profitTo" value="${profitRange.to}"></div>
+    </div>
+    <p id="profitRangeError" role="alert" style="color:#ff6262"></p>
+    <div class="modal-actions"><button onclick="applyProfitRange()">Показать прибыль</button></div>`);
+  document.getElementById('profitPreset').value=profitRange.from||profitRange.to?'custom':'all';
+  ['profitFrom','profitTo'].forEach(id=>document.getElementById(id).onchange=()=>document.getElementById('profitPreset').value='custom');
+}
+function chooseProfitPreset(value){
+  const now=new Date(), start=new Date(now);
+  let from='',to='';
+  if(value==='custom') return;
+  if(value!=='all'){
+    to=localDateISO(now);
+    if(value==='7'||value==='30') start.setDate(start.getDate()-Number(value)+1);
+    if(value==='month') start.setDate(1);
+    if(value==='year') start.setMonth(0,1);
+    from=localDateISO(start);
+  }
+  document.getElementById('profitFrom').value=from;
+  document.getElementById('profitTo').value=to;
+}
+function applyProfitRange(){
+  const from=document.getElementById('profitFrom').value,to=document.getElementById('profitTo').value;
+  if(from && to && from>to){document.getElementById('profitRangeError').textContent='Дата начала должна быть не позже даты окончания.';return;}
+  profitRange={from,to,label:from||to?`${from||'Начало'} — ${to||'Сегодня'}`:'Все время'};
+  renderDashboard();
+  closeSectionModal();
+}
+
 function renderDashboard(){
   const available=state.cars.filter(c=>c.status!=='Продана');
   const totalsAll=state.cars.map(c=>({c,t:totals(c)}));
   const invested=state.cars.reduce((s,c)=>s+repairExpensesTotal(c),0);
   const sales=totalsAll.reduce((s,x)=>s+x.t.sale,0);
-  const profit=totalsAll.reduce((s,x)=>s+x.t.profit,0);
+  const profit=profitCars().reduce((sum,c)=>sum+totals(c).profit,0);
 
   const di=document.getElementById('dashInventory'); if(di) di.textContent=available.length;
   const dv=document.getElementById('dashInvested'); if(dv) dv.textContent=money(invested);
   const ds=document.getElementById('dashSales'); if(ds) ds.textContent=money(sales);
   const dp=document.getElementById('dashProfit'); if(dp){dp.textContent=money(profit);dp.style.color=profit<0?'#ff6262':'#39d353'}
 
+  document.getElementById('profitPeriodLabel').textContent=profitRange.label+' · выбрать период';
   const invList=document.getElementById('dashInventoryList');
   if(invList){
     invList.innerHTML='';
@@ -2699,7 +2772,7 @@ document.addEventListener('visibilitychange',()=>{
 
 initAuth();
 </script>
-  <script src="./mobile.js?v=16.1"></script>
+  <script src="./mobile.js?v=16.2"></script>
   <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
