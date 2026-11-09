@@ -7,8 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="28 Auto Tracker"/>
-  <link rel="manifest" href="./manifest.webmanifest"/>
+  <link rel="manifest" href="./manifest.webmanifest?v=16.2.2"/>
   <link rel="stylesheet" href="./mobile.css?v=16.2.1"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=16.2.2"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=16.2.2"/>
   <title>28 Auto Tracker</title>
   
   <style>
@@ -932,13 +934,18 @@
 }
 </style>
 
+<style>
+/* v16.2.2: selected orange logo; preserve the existing layout dimensions. */
+.brand-icon,.auth-logo{background:#ff9f0a;border:0;box-shadow:none;overflow:hidden;flex-shrink:0}
+.brand-icon img,.auth-logo img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+</style>
 </head>
 <body>
 
 <div id="authOverlay" class="auth-overlay">
   <div class="auth-card">
     <div class="auth-brand">
-      <div class="auth-logo">28</div>
+      <div class="auth-logo"><img src="./icon-192.png?v=16.2.2" alt="28" width="50" height="50"></div>
       <div>
         <h1>28 Auto Tracker</h1>
         <div class="auth-sub">Вход в общую базу машин</div>
@@ -957,7 +964,7 @@
   <aside>
     <div class="logo-wrap">
       <div class="brand-icon">
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="9" r="2.5"/><path d="M7.8 17c.8-2.7 2.5-4 4.2-4s3.4 1.3 4.2 4"/></svg>
+        <img src="./icon-192.png?v=16.2.2" alt="28" width="52" height="52">
       </div>
       <div>
         <div class="logo">28 Auto Tracker</div>

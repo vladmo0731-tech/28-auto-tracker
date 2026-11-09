@@ -1,5 +1,5 @@
-const CACHE='28-auto-tracker-v16.2.1';
-const STATIC=['./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE='28-auto-tracker-v16.2.2';
+const STATIC=['./manifest.webmanifest?v=16.2.2','./icon-192.png?v=16.2.2','./icon-512.png?v=16.2.2','./apple-touch-icon.png?v=16.2.2','./favicon-32.png?v=16.2.2'];
 
 self.addEventListener('install',event=>{
   self.skipWaiting();
